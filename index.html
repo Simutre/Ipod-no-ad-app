@@ -103,7 +103,6 @@
 
   <div id="ipodContainer" class="ipod-chassis-white relative w-full max-w-[360px] sm:max-w-[375px] h-[670px] sm:h-[690px] rounded-[42px] p-5 flex flex-col justify-between items-center transition-colors duration-300 select-none">
     
-    <!-- ÉCRAN IPOD -->
     <div class="relative w-full h-[270px] rounded-xl overflow-hidden ipod-screen border-[3px] border-[#222] flex flex-col bg-[#eff3f8]">
       
       <div id="screenHeader" class="h-6 w-full ipod-header-gradient flex items-center justify-between px-2 text-[11px] font-bold text-slate-800 shadow-sm z-10 shrink-0">
@@ -130,15 +129,13 @@
       <div class="relative flex-1 overflow-hidden flex flex-col">
         <div class="screen-glass-glare absolute inset-0 z-20 pointer-events-none"></div>
 
-        <!-- 1. VUE MENU -->
         <div id="viewMenu" class="absolute inset-0 flex flex-col bg-white overflow-hidden">
           <div id="menuList" class="flex-1 overflow-y-auto no-scrollbar py-0 text-[13px] font-semibold text-slate-800"></div>
         </div>
 
-        <!-- 2. VUE RECHERCHE EN LIGNE -->
         <div id="viewSearch" class="absolute inset-0 hidden flex flex-col bg-white p-2">
           <div class="flex items-center justify-between mb-1">
-            <p class="text-[11px] text-slate-500 font-medium">Recherche de morceaux gratuits :</p>
+            <p class="text-[11px] text-slate-500 font-medium">Recherche (cliquez pour écouter / télécharger) :</p>
             <button onclick="goBack()" class="text-[10px] text-blue-600 font-bold hover:underline">Annuler</button>
           </div>
           <div class="flex gap-1 mb-2">
@@ -149,11 +146,10 @@
             </button>
           </div>
           <div id="searchResultsList" class="flex-1 overflow-y-auto no-scrollbar text-xs border border-slate-200 rounded divide-y divide-slate-100">
-            <div class="p-3 text-center text-slate-400 text-xs italic">Entrez un titre pour chercher de la musique.</div>
+            <div class="p-3 text-center text-slate-400 text-xs italic">Entrez un titre pour chercher.</div>
           </div>
         </div>
 
-        <!-- 3. VUE NOW PLAYING -->
         <div id="viewNowPlaying" class="absolute inset-0 hidden flex flex-col justify-between p-3 bg-gradient-to-b from-[#ffffff] to-[#e4eaf2]">
           <div class="flex gap-3 items-center">
             <div class="relative w-24 h-24 rounded-md overflow-hidden shadow-md border border-slate-300 bg-slate-200 shrink-0">
@@ -197,7 +193,6 @@
           </div>
         </div>
 
-        <!-- 4. VUE RÉGLAGES -->
         <div id="viewSettings" class="absolute inset-0 hidden flex flex-col bg-white p-3 overflow-y-auto no-scrollbar text-xs">
           <div class="flex items-center justify-between mb-2 border-b pb-1">
             <h3 class="font-bold text-slate-800 text-sm">Apparence de l'iPod</h3>
@@ -229,7 +224,6 @@
       </div>
     </div>
 
-    <!-- ZONE CLICK WHEEL -->
     <div class="relative w-[280px] h-[280px] sm:w-[290px] sm:h-[290px] flex items-center justify-center my-auto">
       <div id="clickWheel" class="click-wheel w-full h-full rounded-full cursor-pointer relative flex items-center justify-center select-none touch-none">
         
@@ -259,7 +253,6 @@
   </div>
 
   <script>
-    // Bibliothèque initiale (morceaux libres)
     let defaultLibrary = [
       {
         id: "stream-1",
@@ -270,26 +263,16 @@
         src: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3",
         sourceType: "En ligne",
         isLocal: false
-      },
-      {
-        id: "stream-2",
-        title: "Synthwave Dreams",
-        artist: "RetroWave Nights",
-        album: "Neon City 1984",
-        cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&auto=format&fit=crop&q=80",
-        src: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=synthwave-80s-110045.mp3",
-        sourceType: "En ligne",
-        isLocal: false
       }
     ];
 
     let library = [...defaultLibrary];
 
-    // --- GESTION DE LA BASE DE DONNÉES LOCALE (IndexedDB) POUR SAUVEGARDER LES MP3 ---
+    // --- BASE DE DONNÉES LOCALE (IndexedDB) POUR PERSISTANCE DES FICHIERS ---
     let db;
     function initDB() {
       return new Promise((resolve) => {
-        const request = indexedDB.open("iPodDatabase", 1);
+        const request = indexedDB.open("iPodDatabase", 2);
         request.onupgradeneeded = (e) => {
           db = e.target.result;
           if (!db.objectStoreNames.contains("tracks")) {
@@ -315,16 +298,19 @@
         if (savedTracks && savedTracks.length > 0) {
           savedTracks.forEach(st => {
             const blobUrl = URL.createObjectURL(st.blob);
-            library.unshift({
-              id: st.id,
-              title: st.title,
-              artist: st.artist,
-              album: st.album,
-              cover: st.cover,
-              src: blobUrl,
-              sourceType: "Local",
-              isLocal: true
-            });
+            // Éviter les doublons si déjà présent
+            if (!library.some(l => l.id === st.id)) {
+              library.unshift({
+                id: st.id,
+                title: st.title,
+                artist: st.artist,
+                album: st.album,
+                cover: st.cover,
+                src: blobUrl,
+                sourceType: "Téléchargé",
+                isLocal: true
+              });
+            }
           });
         }
         if(callback) callback();
@@ -352,7 +338,7 @@
       store.delete(trackId);
     }
 
-    // --- AUDIO & CLIC MÉCANIQUE ---
+    // --- AUDIO & CLIC ---
     let audioCtx = null;
     let soundEnabled = true;
 
@@ -383,7 +369,7 @@
       } catch (e) {}
     }
 
-    // --- NAVIGATION ET ÉCRANS ---
+    // --- NAVIGATION ---
     const views = { MENU: "MENU", NOW_PLAYING: "NOW_PLAYING", SEARCH: "SEARCH", SETTINGS: "SETTINGS" };
     let currentView = views.MENU;
     let menuHistory = [];
@@ -418,10 +404,10 @@
           };
         case "songs":
           return {
-            title: "Morceaux (Appuyez pour supprimer)",
+            title: "Morceaux",
             items: library.map((song, idx) => ({
               label: song.title,
-              subLabel: song.artist + (song.isLocal ? " [Local - Clic long/Suppr]" : ""),
+              subLabel: song.artist + (song.isLocal ? " [Sauvegardé]" : ""),
               action: () => playSongAtIndex(idx),
               onDelete: () => removeTrack(idx)
             }))
@@ -582,7 +568,6 @@
 
           row.appendChild(contentDiv);
 
-          // Bouton poubelle optionnel si on est dans le menu morceaux
           if (item.onDelete) {
             const delBtn = document.createElement("button");
             delBtn.className = `text-[11px] px-1.5 py-0.5 rounded ml-1 ${isSel ? 'text-white hover:bg-red-700' : 'text-red-500 hover:bg-red-100'}`;
@@ -844,7 +829,7 @@
     btnNext.addEventListener("click", (e) => { e.stopPropagation(); playNextTrack(); });
     btnPrev.addEventListener("click", (e) => { e.stopPropagation(); playPrevTrack(); });
 
-    // Recherche en ligne
+    // Recherche en ligne avec option d'ajout direct & téléchargement permanent
     const searchInput = document.getElementById("searchInput");
     const searchBtn = document.getElementById("searchBtn");
     const searchResultsList = document.getElementById("searchResultsList");
@@ -864,31 +849,70 @@
           const row = document.createElement("div");
           row.className = "p-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between";
           row.innerHTML = `
-            <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="flex items-center gap-2 min-w-0 flex-1 click-target">
               <img src="${item.artworkUrl60 || item.artworkUrl100}" class="w-8 h-8 rounded object-cover border shrink-0"/>
               <div class="truncate">
                 <div class="font-bold text-slate-800 truncate">${escapeHtml(item.trackName)}</div>
                 <div class="text-[10px] text-slate-500 truncate">${escapeHtml(item.artistName)}</div>
               </div>
             </div>
-            <button class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-[10px] ml-2 shrink-0">
-              <i class="fa-solid fa-play"></i>
-            </button>
+            <div class="flex items-center gap-1 ml-2 shrink-0">
+              <button class="download-btn bg-emerald-600 text-white rounded w-6 h-6 flex items-center justify-center text-[10px] hover:bg-emerald-700" title="Télécharger et ajouter à la playlist">
+                <i class="fa-solid fa-download"></i>
+              </button>
+              <button class="play-btn bg-blue-600 text-white rounded w-6 h-6 flex items-center justify-center text-[10px] hover:bg-blue-700" title="Écouter">
+                <i class="fa-solid fa-play"></i>
+              </button>
+            </div>
           `;
-          row.addEventListener("click", () => {
-            const newTrack = {
-              id: "itunes-" + item.trackId,
-              title: item.trackName,
-              artist: item.artistName,
-              album: item.collectionName || "Single",
-              cover: (item.artworkUrl100 || item.artworkUrl60).replace("100x100bb", "400x400bb"),
-              src: item.previewUrl,
-              sourceType: "Streaming",
-              isLocal: false
-            };
-            library.unshift(newTrack);
+
+          const trackObj = {
+            id: "itunes-" + item.trackId,
+            title: item.trackName,
+            artist: item.artistName,
+            album: item.collectionName || "Single",
+            cover: (item.artworkUrl100 || item.artworkUrl60).replace("100x100bb", "400x400bb"),
+            src: item.previewUrl,
+            sourceType: "Streaming",
+            isLocal: false
+          };
+
+          // Lancer l'écoute directe
+          row.querySelector(".play-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            library.unshift(trackObj);
             playSongAtIndex(0);
           });
+
+          // Télécharger et sauvegarder définitivement le morceau
+          row.querySelector(".download-btn").addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const btn = e.currentTarget;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            try {
+              const res = await fetch(trackObj.src);
+              const blob = await res.blob();
+              const blobUrl = URL.createObjectURL(blob);
+
+              const localTrack = {
+                ...trackObj,
+                id: "dl-" + Date.now() + "-" + Math.random(),
+                src: blobUrl,
+                sourceType: "Téléchargé",
+                isLocal: true
+              };
+
+              library.unshift(localTrack);
+              saveTrackToDB(localTrack, blob);
+
+              btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+              btn.classList.remove("bg-emerald-600", "hover:bg-emerald-700");
+              btn.classList.add("bg-blue-500");
+            } catch(err) {
+              btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            }
+          });
+
           searchResultsList.appendChild(row);
         });
       } catch (e) {
@@ -899,7 +923,7 @@
     searchBtn.addEventListener("click", () => searchOnlineMusic(searchInput.value));
     searchInput.addEventListener("keypress", (e) => { if (e.key === "Enter") searchOnlineMusic(searchInput.value); });
 
-    // Import local avec stockage persistant
+    // Import local
     const localFileInput = document.getElementById("localFileInput");
     function triggerLocalImport() { localFileInput.click(); }
 
@@ -950,7 +974,6 @@
       soundIndicator.innerHTML = soundEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
     });
 
-    // Lancement au démarrage après chargement de la base de données
     window.addEventListener("DOMContentLoaded", () => {
       initDB().then(() => {
         renderScreen();
