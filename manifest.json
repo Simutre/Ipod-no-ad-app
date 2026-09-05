@@ -1,17 +1,22 @@
 {
-  "short_name": "iPod",
   "name": "iPod Classic Player",
-  "icons": [
-    {
-      "src": "icon.svg",
-      "type": "image/svg+xml",
-      "sizes": "512x512 192x192 any",
-      "purpose": "any maskable"
-    }
-  ],
+  "short_name": "iPod",
+  "description": "Un lecteur de musique rétro sans pub avec interface iPod Classic",
   "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
-  "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["music", "entertainment", "utilities"],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ]
 }
