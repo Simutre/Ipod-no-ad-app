@@ -135,11 +135,11 @@
 
         <div id="viewSearch" class="absolute inset-0 hidden flex flex-col bg-white p-2">
           <div class="flex items-center justify-between mb-1">
-            <p class="text-[11px] text-slate-500 font-medium">Recherche (vraies musiques sans pub) :</p>
+            <p class="text-[11px] text-slate-500 font-medium">Recherche (musiques sans pub) :</p>
             <button onclick="goBack()" class="text-[10px] text-blue-600 font-bold hover:underline">Annuler</button>
           </div>
           <div class="flex gap-1 mb-2">
-            <input id="searchInput" type="text" placeholder="Artiste, Titre (ex: Daft Punk, Eminem)..." 
+            <input id="searchInput" type="text" placeholder="Artiste, Titre (ex: Daft Punk)..." 
                    class="flex-1 px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500 shadow-inner" />
             <button id="searchBtn" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 flex items-center justify-center">
               <i class="fa-solid fa-magnifying-glass"></i>
@@ -255,11 +255,11 @@
   <script>
     let library = [];
 
-    // --- BASE DE DONNÉES LOCALE (IndexedDB) POUR PERSISTANCE DES FICHIERS ---
+    // Base de données IndexedDB
     let db;
     function initDB() {
       return new Promise((resolve) => {
-        const request = indexedDB.open("iPodDatabase", 5);
+        const request = indexedDB.open("iPodDatabase", 6);
         request.onupgradeneeded = (e) => {
           db = e.target.result;
           if (!db.objectStoreNames.contains("tracks")) {
@@ -300,11 +300,10 @@
           });
         }
         if (library.length === 0) {
-          // Morceau par défaut si vide
           library.push({
             id: "def-1",
-            title: "Sélectionnez vos musiques",
-            artist: "Utilisez la recherche en ligne",
+            title: "Recherchez vos musiques",
+            artist: "Utilisez le menu Recherche",
             album: "iPod Classic",
             cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80",
             src: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3",
@@ -337,7 +336,7 @@
       store.delete(trackId);
     }
 
-    // --- AUDIO & CLIC ---
+    // Audio & Sound
     let audioCtx = null;
     let soundEnabled = true;
 
@@ -368,7 +367,7 @@
       } catch (e) {}
     }
 
-    // --- NAVIGATION ---
+    // Navigation UI
     const views = { MENU: "MENU", NOW_PLAYING: "NOW_PLAYING", SEARCH: "SEARCH", SETTINGS: "SETTINGS" };
     let currentView = views.MENU;
     let menuHistory = [];
@@ -437,9 +436,7 @@
     function removeTrack(idx) {
       if (confirm(`Voulez-vous supprimer "${library[idx].title}" de l'iPod ?`)) {
         const track = library[idx];
-        if (track.isLocal) {
-          deleteTrackFromDB(track.id);
-        }
+        if (track.isLocal) deleteTrackFromDB(track.id);
         library.splice(idx, 1);
         if (currentTrackIndex >= library.length) currentTrackIndex = Math.max(0, library.length - 1);
         renderScreen();
@@ -602,7 +599,7 @@
       } 
       else if (currentView === views.SEARCH) {
         viewSearch.classList.remove("hidden");
-        screenTitle.textContent = "Recherche Metrolist";
+        screenTitle.textContent = "Recherche en ligne";
       } 
       else if (currentView === views.SETTINGS) {
         viewSettings.classList.remove("hidden");
@@ -731,7 +728,7 @@
       }
     });
 
-    // Gestion click wheel
+    // Wheel Controls
     const clickWheel = document.getElementById("clickWheel");
     let isTrackingWheel = false;
     let lastAngle = null;
@@ -828,138 +825,152 @@
     btnNext.addEventListener("click", (e) => { e.stopPropagation(); playNextTrack(); });
     btnPrev.addEventListener("click", (e) => { e.stopPropagation(); playPrevTrack(); });
 
-    // --- MOTEUR DE RECHERCHE DE VRAIS MORCOEX (Style Metrolist via Piped / Invidious & Archive.org) ---
+    // --- RECHERCHE MULTI-INSTANCES ROBUSTE (Invidious API) ---
     const searchInput = document.getElementById("searchInput");
     const searchBtn = document.getElementById("searchBtn");
     const searchResultsList = document.getElementById("searchResultsList");
 
+    const invidiousInstances = [
+      "https://invidious.nerdvpn.de",
+      "https://inv.tux.pizza",
+      "https://invidious.projectsegfau.lt",
+      "https://invidious.drgns.space",
+      "https://vid.puffyan.us"
+    ];
+
     async function searchOnlineMusic(query) {
       if (!query || query.trim() === "") return;
-      searchResultsList.innerHTML = `<div class="p-3 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Recherche des vraies musiques...</div>`;
+      searchResultsList.innerHTML = `<div class="p-3 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Recherche en cours...</div>`;
       
-      try {
-        // Utilisation d'un pont public open-source (Instance Piped/Invidious) pour chercher les véritables pistes audio intégrales
-        const response = await fetch(`https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(query)}&filter=music_songs`);
-        const data = await response.json();
-        
-        let items = data.items || [];
-        // Filtrer uniquement les vidéos/pistes musicales valides
-        items = items.filter(i => i.type === 'stream' || i.duration > 0);
+      let items = [];
+      let activeDomain = "";
 
-        if (items.length === 0) {
-          searchResultsList.innerHTML = `<div class="p-3 text-center text-slate-400">Aucun résultat trouvé pour "${escapeHtml(query)}".</div>`;
-          return;
+      // Test des instances en boucle jusqu'à en trouver une fonctionnelle
+      for (const domain of invidiousInstances) {
+        try {
+          const res = await fetch(`${domain}/api/v1/search?q=${encodeURIComponent(query)}&type=video`, {
+            signal: AbortSignal.timeout(3500)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              items = data;
+              activeDomain = domain;
+              break;
+            }
+          }
+        } catch(e) {
+          continue;
         }
+      }
 
-        searchResultsList.innerHTML = "";
-        items.forEach((item) => {
-          const videoId = item.url ? item.url.split('v=')[1] : item.videoId;
-          if (!videoId) return;
+      if (items.length === 0) {
+        searchResultsList.innerHTML = `<div class="p-3 text-center text-slate-400">Aucun résultat trouvé pour "${escapeHtml(query)}". Vérifiez l'orthographe.</div>`;
+        return;
+      }
 
-          const row = document.createElement("div");
-          row.className = "p-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between";
-          row.innerHTML = `
-            <div class="flex items-center gap-2 min-w-0 flex-1">
-              <img src="${item.thumbnail || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80'}" class="w-8 h-8 rounded object-cover border shrink-0"/>
-              <div class="truncate">
-                <div class="font-bold text-slate-800 truncate">${escapeHtml(item.title)}</div>
-                <div class="text-[10px] text-slate-500 truncate">${escapeHtml(item.uploaderName || 'Artiste')} • ${Math.floor(item.duration / 60)}:${(item.duration % 60).toString().padStart(2,'0')}</div>
-              </div>
+      searchResultsList.innerHTML = "";
+      items.slice(0, 15).forEach((item) => {
+        const videoId = item.videoId;
+        if (!videoId) return;
+
+        const row = document.createElement("div");
+        row.className = "p-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between";
+        row.innerHTML = `
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <img src="${item.videoThumbnails ? item.videoThumbnails[0]?.url : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80'}" class="w-8 h-8 rounded object-cover border shrink-0"/>
+            <div class="truncate">
+              <div class="font-bold text-slate-800 truncate">${escapeHtml(item.title)}</div>
+              <div class="text-[10px] text-slate-500 truncate">${escapeHtml(item.author || 'Artiste')}</div>
             </div>
-            <div class="flex items-center gap-1 ml-2 shrink-0">
-              <button class="download-btn bg-emerald-600 text-white rounded w-6 h-6 flex items-center justify-center text-[10px] hover:bg-emerald-700" title="Télécharger le morceau complet">
-                <i class="fa-solid fa-download"></i>
-              </button>
-              <button class="play-btn bg-blue-600 text-white rounded w-6 h-6 flex items-center justify-center text-[10px] hover:bg-blue-700" title="Écouter">
-                <i class="fa-solid fa-play"></i>
-              </button>
-            </div>
-          `;
+          </div>
+          <div class="flex items-center gap-1 ml-2 shrink-0">
+            <button class="download-btn bg-emerald-600 text-white rounded w-6 h-6 flex items-center justify-center text-[10px] hover:bg-emerald-700" title="Télécharger le morceau">
+              <i class="fa-solid fa-download"></i>
+            </button>
+            <button class="play-btn bg-blue-600 text-white rounded w-6 h-6 flex items-center justify-center text-[10px] hover:bg-blue-700" title="Écouter">
+              <i class="fa-solid fa-play"></i>
+            </button>
+          </div>
+        `;
 
-          // Récupération dynamique du flux audio direct du morceau via le pont open-source
-          const getAudioStreamUrl = async () => {
-            const streamRes = await fetch(`https://pipedapi.kavin.rocks/streams/${videoId}`);
-            const streamData = await streamRes.json();
-            // Filtrer le meilleur flux audio m4a ou webm
-            const audioStreams = streamData.audioStreams.filter(s => s.url);
-            if (audioStreams.length > 0) {
-              // Trier par qualité
-              audioStreams.sort((a, b) => b.bitrate - a.bitrate);
-              return audioStreams[0].url;
-            }
-            throw new Error("Flux audio indisponible");
-          };
+        const getAudioUrl = async () => {
+          const res = await fetch(`${activeDomain}/api/v1/videos/${videoId}`);
+          const data = await res.json();
+          const audioFormats = data.adaptiveFormats.filter(f => f.type && f.type.includes("audio"));
+          if (audioFormats.length > 0) {
+            audioFormats.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+            return audioFormats[0].url;
+          }
+          throw new Error("Pas de flux audio");
+        };
 
-          // Écouter instantanément
-          row.querySelector(".play-btn").addEventListener("click", async (e) => {
-            e.stopPropagation();
-            const btn = e.currentTarget;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            try {
-              const streamUrl = await getAudioStreamUrl();
-              const trackObj = {
-                id: "real-" + videoId,
-                title: item.title,
-                artist: item.uploaderName || "Artiste",
-                album: "Metrolist Direct",
-                cover: item.thumbnail,
-                src: streamUrl,
-                sourceType: "Streaming",
-                isLocal: false
-              };
-              library.unshift(trackObj);
-              playSongAtIndex(0);
-            } catch(err) {
-              alert("Impossible de lire ce titre directement.");
-              btn.innerHTML = '<i class="fa-solid fa-play"></i>';
-            }
-          });
-
-          // Télécharger et sauvegarder définitivement le morceau complet dans l'iPod
-          row.querySelector(".download-btn").addEventListener("click", async (e) => {
-            e.stopPropagation();
-            const btn = e.currentTarget;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            try {
-              const streamUrl = await getAudioStreamUrl();
-              const res = await fetch(streamUrl);
-              const blob = await res.blob();
-              const blobUrl = URL.createObjectURL(blob);
-
-              const localTrack = {
-                id: "dl-" + Date.now() + "-" + Math.random(),
-                title: item.title,
-                artist: item.uploaderName || "Artiste",
-                album: "Téléchargé",
-                cover: item.thumbnail,
-                src: blobUrl,
-                sourceType: "Téléchargé",
-                isLocal: true
-              };
-
-              library.unshift(localTrack);
-              saveTrackToDB(localTrack, blob);
-
-              btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-              btn.classList.remove("bg-emerald-600", "hover:bg-emerald-700");
-              btn.classList.add("bg-blue-500");
-            } catch(err) {
-              btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-            }
-          });
-
-          searchResultsList.appendChild(row);
+        // Lecture directe
+        row.querySelector(".play-btn").addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const btn = e.currentTarget;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+          try {
+            const streamUrl = await getAudioUrl();
+            const trackObj = {
+              id: "real-" + videoId,
+              title: item.title,
+              artist: item.author || "Artiste",
+              album: "Streaming",
+              cover: item.videoThumbnails ? item.videoThumbnails[0]?.url : "",
+              src: streamUrl,
+              sourceType: "Streaming",
+              isLocal: false
+            };
+            library.unshift(trackObj);
+            playSongAtIndex(0);
+          } catch(err) {
+            alert("Erreur de lecture de cette piste.");
+            btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+          }
         });
 
-      } catch (e) {
-        searchResultsList.innerHTML = `<div class="p-3 text-center text-red-500 text-xs">Erreur de connexion au serveur de recherche.</div>`;
-      }
+        // Télécharger dans IndexedDB
+        row.querySelector(".download-btn").addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const btn = e.currentTarget;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+          try {
+            const streamUrl = await getAudioUrl();
+            const res = await fetch(streamUrl);
+            const blob = await res.blob();
+            const blobUrl = URL.createObjectURL(blob);
+
+            const localTrack = {
+              id: "dl-" + Date.now() + "-" + Math.random(),
+              title: item.title,
+              artist: item.author || "Artiste",
+              album: "Téléchargé",
+              cover: item.videoThumbnails ? item.videoThumbnails[0]?.url : "",
+              src: blobUrl,
+              sourceType: "Téléchargé",
+              isLocal: true
+            };
+
+            library.unshift(localTrack);
+            saveTrackToDB(localTrack, blob);
+
+            btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+            btn.classList.remove("bg-emerald-600", "hover:bg-emerald-700");
+            btn.classList.add("bg-blue-500");
+          } catch(err) {
+            btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+          }
+        });
+
+        searchResultsList.appendChild(row);
+      });
     }
 
     searchBtn.addEventListener("click", () => searchOnlineMusic(searchInput.value));
     searchInput.addEventListener("keypress", (e) => { if (e.key === "Enter") searchOnlineMusic(searchInput.value); });
 
-    // Import local
+    // Importation MP3 locale
     const localFileInput = document.getElementById("localFileInput");
     function triggerLocalImport() { localFileInput.click(); }
 
@@ -987,7 +998,7 @@
       playSongAtIndex(0);
     });
 
-    // Thèmes & Réglages
+    // Thèmes
     const ipodContainer = document.getElementById("ipodContainer");
     const toggleSoundCheck = document.getElementById("toggleSoundCheck");
     const soundIndicator = document.getElementById("soundIndicator");
