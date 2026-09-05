@@ -102,32 +102,18 @@
           <div id="menuList" class="flex-1 overflow-y-auto no-scrollbar py-0 text-[13px] font-semibold text-slate-800"></div>
         </div>
 
-        <div id="viewSearch" class="absolute inset-0 hidden flex flex-col bg-white p-2">
-          <div class="flex items-center justify-between mb-1">
-            <p class="text-[11px] text-slate-500 font-medium">Recherche (Extraits pour trouver le titre) :</p>
-            <button onclick="goBack()" class="text-[10px] text-blue-600 font-bold hover:underline">Annuler</button>
-          </div>
-          <div class="flex gap-1 mb-2">
-            <input id="searchInput" type="text" placeholder="Artiste, Titre..." class="flex-1 px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none" />
-            <button id="searchBtn" class="bg-blue-600 text-white px-2 py-1 rounded text-xs"><i class="fa-solid fa-magnifying-glass"></i></button>
-          </div>
-          <div id="searchResultsList" class="flex-1 overflow-y-auto no-scrollbar text-xs border border-slate-200 rounded divide-y divide-slate-100">
-            <div class="p-3 text-center text-slate-400 text-xs italic">Recherchez vos musiques.</div>
-          </div>
-        </div>
-
         <div id="viewYoutubeStream" class="absolute inset-0 hidden flex flex-col bg-white p-2">
           <div class="flex items-center justify-between mb-1">
-            <p class="text-[11px] text-slate-500 font-medium">Écouter en entier (Lien YouTube) :</p>
+            <p class="text-[11px] text-slate-500 font-medium">Ajouter un lien YouTube :</p>
             <button onclick="goBack()" class="text-[10px] text-blue-600 font-bold hover:underline">Fermer</button>
           </div>
           <div class="flex flex-col gap-2 mt-2">
-            <input id="ytUrlInput" type="text" placeholder="Coller le lien de la vidéo YouTube..." class="w-full px-2 py-2 border border-slate-300 rounded text-[11px] focus:outline-none focus:border-red-500" />
+            <input id="ytUrlInput" type="text" placeholder="Coller le lien de la vidéo..." class="w-full px-2 py-2 border border-slate-300 rounded text-[11px] focus:outline-none focus:border-red-500" />
             <button id="playYtBtn" class="w-full bg-red-600 text-white px-2 py-2 rounded text-xs hover:bg-red-700 flex items-center justify-center font-bold shadow-md">
-              <i class="fa-brands fa-youtube mr-2 text-sm"></i> Écouter le morceau complet
+              <i class="fa-brands fa-youtube mr-2 text-sm"></i> Ajouter et Écouter
             </button>
-            <div class="text-center text-[10px] text-slate-500 mt-2 px-1">
-              Collez un lien YouTube. L'iPod jouera le son en entier via son lecteur interne sans ouvrir l'application YouTube.
+            <div id="ytStatus" class="text-center text-[10px] text-slate-500 mt-2 px-1 font-medium">
+              Le morceau sera automatiquement stocké dans "Ma Musique".
             </div>
           </div>
         </div>
@@ -195,14 +181,65 @@
   <script>
     let library = [];
 
-    // --- LECTEUR YOUTUBE FANTÔME (API OFFICIELLE) ---
+    // --- BASE DE DONNÉES LOCALE (IndexedDB) POUR STOCKER LES LIENS YOUTUBE À VIE ---
+    let db;
+    function initDB() {
+      return new Promise((resolve) => {
+        const request = indexedDB.open("iPodDatabaseYT", 1);
+        request.onupgradeneeded = (e) => {
+          db = e.target.result;
+          if (!db.objectStoreNames.contains("yt_tracks")) {
+            db.createObjectStore("yt_tracks", { keyPath: "id" });
+          }
+        };
+        request.onsuccess = (e) => {
+          db = e.target.result;
+          loadSavedTracks(resolve);
+        };
+        request.onerror = () => resolve();
+      });
+    }
+
+    function loadSavedTracks(callback) {
+      if (!db) { if(callback) callback(); return; }
+      const transaction = db.transaction(["yt_tracks"], "readonly");
+      const store = transaction.objectStore("yt_tracks");
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const savedTracks = request.result;
+        if (savedTracks && savedTracks.length > 0) {
+          savedTracks.forEach(st => {
+            if (!library.some(l => l.id === st.id)) {
+              library.push(st);
+            }
+          });
+        }
+        if(callback) callback();
+      };
+    }
+
+    function saveTrackToDB(trackObj) {
+      if (!db) return;
+      const transaction = db.transaction(["yt_tracks"], "readwrite");
+      const store = transaction.objectStore("yt_tracks");
+      store.put(trackObj);
+    }
+
+    function deleteTrackFromDB(trackId) {
+      if (!db) return;
+      const transaction = db.transaction(["yt_tracks"], "readwrite");
+      const store = transaction.objectStore("yt_tracks");
+      store.delete(trackId);
+    }
+
+    // --- LECTEUR YOUTUBE FANTÔME ---
     let ytPlayer = null;
     let isYtReady = false;
 
     function onYouTubeIframeAPIReady() {
       ytPlayer = new YT.Player('ytPlayerContainer', {
-        height: '1', width: '1',
-        videoId: '',
+        height: '1', width: '1', videoId: '',
         playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'fs': 0, 'playsinline': 1 },
         events: {
           'onReady': () => isYtReady = true,
@@ -214,14 +251,13 @@
     function onYtStateChange(event) {
       if (event.data === YT.PlayerState.PLAYING) {
         isPlaying = true;
-        
-        // Récupérer le vrai titre de la vidéo si non défini
         const currentTrack = library[currentTrackIndex];
         if(currentTrack && currentTrack.title === "Chargement..." && ytPlayer.getVideoData) {
             const vData = ytPlayer.getVideoData();
             if(vData && vData.title) {
                 currentTrack.title = vData.title;
                 currentTrack.artist = vData.author || "YouTube";
+                saveTrackToDB(currentTrack); // Mettre à jour en base
                 updateNowPlayingUI();
             }
         }
@@ -237,18 +273,17 @@
     function extractYtId(url) {
       const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
       const match = url.match(regExp);
-      return (match && match[2].length === 11) ? match[2] : url; // Retourne l'ID ou l'entrée brute si c'est déjà un ID
+      return (match && match[2].length === 11) ? match[2] : url;
     }
 
     // --- NAVIGATION ---
-    const views = { MENU: "MENU", NOW_PLAYING: "NOW_PLAYING", SEARCH: "SEARCH", YT_STREAM: "YT_STREAM" };
+    const views = { MENU: "MENU", NOW_PLAYING: "NOW_PLAYING", YT_STREAM: "YT_STREAM" };
     let currentView = views.MENU;
     let menuHistory = [];
     let currentMenuKey = "main";
     let selectedIndex = 0;
     let currentTrackIndex = 0;
     let isPlaying = false;
-    let customMenuList = null;
     let progressInterval = null;
 
     function getMenuData(key) {
@@ -257,22 +292,26 @@
           return {
             title: "iPod",
             items: [
-              { label: "Ma Musique", action: () => openMenu("songs") },
-              { label: "Écouter via Lien YouTube", action: () => switchToView(views.YT_STREAM) },
-              { label: "Importer Fichier MP3 Local", action: () => document.getElementById('localFileInput').click() },
-              { label: "Recherche iTunes (Extraits)", action: () => switchToView(views.SEARCH) },
+              { label: "Ma Musique (" + library.length + ")", action: () => openMenu("songs") },
+              { label: "Ajouter lien YouTube", action: () => switchToView(views.YT_STREAM) },
+              { label: "Importer Fichier Local", action: () => document.getElementById('localFileInput').click() },
               { label: "À l'écoute", action: () => { if(library.length > 0) switchToView(views.NOW_PLAYING); } }
             ]
           };
         case "songs":
           if (library.length === 0) return { title: "Vide", items: [{ label: "Aucun morceau", action: () => {} }] };
           return {
-            title: "Musique (" + library.length + ")",
+            title: "Ma Musique",
             items: library.map((song, idx) => ({
               label: song.title,
-              subLabel: song.artist + (song.sourceType === "YouTube" ? " [Stream YT]" : ""),
+              subLabel: song.artist,
               action: () => playSongAtIndex(idx),
-              onDelete: () => { library.splice(idx, 1); renderScreen(); }
+              onDelete: () => {
+                if(song.isLocal) deleteTrackFromDB(song.id);
+                library.splice(idx, 1);
+                if (currentTrackIndex >= library.length) currentTrackIndex = Math.max(0, library.length - 1);
+                renderScreen();
+              }
             }))
           };
         default: return { title: "iPod", items: [] };
@@ -298,17 +337,14 @@
       }
     }
 
-    // --- INTERFACE ---
     function switchToView(viewName) { currentView = viewName; renderScreen(); }
 
     function renderScreen() {
       document.getElementById("viewMenu").classList.add("hidden");
       document.getElementById("viewNowPlaying").classList.add("hidden");
-      document.getElementById("viewSearch").classList.add("hidden");
       document.getElementById("viewYoutubeStream").classList.add("hidden");
 
       document.getElementById("headerBackBtn").classList.toggle("hidden", (currentView === views.MENU && currentMenuKey === "main"));
-      
       document.getElementById("headerPlayIcon").classList.toggle("hidden", !isPlaying);
       document.getElementById("headerPauseIcon").classList.toggle("hidden", isPlaying);
 
@@ -344,15 +380,10 @@
       }
       else if (currentView === views.YT_STREAM) {
         document.getElementById("viewYoutubeStream").classList.remove("hidden");
-        document.getElementById("screenTitle").textContent = "Lien YouTube";
-      }
-      else if (currentView === views.SEARCH) {
-        document.getElementById("viewSearch").classList.remove("hidden");
-        document.getElementById("screenTitle").textContent = "Recherche iTunes";
+        document.getElementById("screenTitle").textContent = "Ajouter Lien";
       }
     }
 
-    // --- LOGIQUE AUDIO ---
     const audioPlayer = document.getElementById("audioPlayer");
 
     function playSongAtIndex(index) {
@@ -360,13 +391,12 @@
       currentTrackIndex = index;
       const track = library[currentTrackIndex];
 
-      // Reset des lecteurs
       audioPlayer.pause();
       if(isYtReady) ytPlayer.pauseVideo();
       clearInterval(progressInterval);
 
       if (track.sourceType === "YouTube") {
-        if (!isYtReady) { alert("Le lecteur YouTube n'est pas encore prêt, veuillez patienter une seconde."); return; }
+        if (!isYtReady) { alert("Lecteur en cours de chargement..."); return; }
         ytPlayer.loadVideoById(track.ytId);
         startProgressTracker("yt");
       } else {
@@ -374,7 +404,6 @@
         audioPlayer.play().then(() => { isPlaying = true; }).catch(() => { isPlaying = false; });
         startProgressTracker("html5");
       }
-      
       switchToView(views.NOW_PLAYING);
     }
 
@@ -383,8 +412,7 @@
       const track = library[currentTrackIndex];
       
       if (track.sourceType === "YouTube" && isYtReady) {
-        const state = ytPlayer.getPlayerState();
-        if (state === YT.PlayerState.PLAYING) { ytPlayer.pauseVideo(); isPlaying = false; }
+        if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) { ytPlayer.pauseVideo(); isPlaying = false; }
         else { ytPlayer.playVideo(); isPlaying = true; }
       } else {
         if (audioPlayer.paused) { audioPlayer.play(); isPlaying = true; }
@@ -408,7 +436,6 @@
       clearInterval(progressInterval);
       progressInterval = setInterval(() => {
         let current = 0, total = 0;
-        
         if (type === "yt" && isYtReady) {
           current = ytPlayer.getCurrentTime() || 0;
           total = ytPlayer.getDuration() || 0;
@@ -416,10 +443,8 @@
           current = audioPlayer.currentTime || 0;
           total = audioPlayer.duration || 0;
         }
-
         if (total > 0 && !isNaN(total)) {
-          const pct = (current / total) * 100;
-          document.getElementById("progressBar").style.width = `${pct}%`;
+          document.getElementById("progressBar").style.width = `${(current / total) * 100}%`;
           document.getElementById("currentTime").textContent = formatTime(current);
           document.getElementById("totalDuration").textContent = "-" + formatTime(total - current);
         }
@@ -432,7 +457,7 @@
       document.getElementById("npTitle").textContent = track.title;
       document.getElementById("npArtist").textContent = track.artist;
       document.getElementById("npAlbum").textContent = track.album || "";
-      document.getElementById("npCover").src = track.cover || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80";
+      document.getElementById("npCover").src = track.cover || "";
       document.getElementById("npIndex").textContent = `${currentTrackIndex + 1} / ${library.length}`;
       document.getElementById("npSourceTag").textContent = track.sourceType;
       document.getElementById("eqBars").classList.toggle("hidden", !isPlaying);
@@ -444,7 +469,6 @@
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    // --- ÉVÈNEMENTS BOUTONS ---
     document.getElementById("btnMenu").onclick = goBack;
     document.getElementById("headerBackBtn").onclick = goBack;
     document.getElementById("btnCenter").onclick = () => {
@@ -457,30 +481,23 @@
     document.getElementById("btnNext").onclick = playNextTrack;
     document.getElementById("btnPrev").onclick = playPrevTrack;
 
-    // --- MOLETTE TACTILE ---
+    // Molette tactile
     const clickWheel = document.getElementById("clickWheel");
-    let isTrackingWheel = false, lastAngle = null, accumulatedAngle = 0;
-    
+    let isTrackingWheel = false, lastAngle = 0, accumulatedAngle = 0;
     function getAngle(e) {
       const rect = clickWheel.getBoundingClientRect();
-      const dx = e.clientX - (rect.left + rect.width / 2);
-      const dy = e.clientY - (rect.top + rect.height / 2);
-      return (Math.atan2(dy, dx) * (180 / Math.PI) + 360) % 360;
+      return (Math.atan2(e.clientY - (rect.top + rect.height / 2), e.clientX - (rect.left + rect.width / 2)) * (180 / Math.PI) + 360) % 360;
     }
-
     clickWheel.addEventListener("pointerdown", (e) => {
       if (e.target.closest("button") || e.target.closest("#btnCenter")) return;
       isTrackingWheel = true; lastAngle = getAngle(e); accumulatedAngle = 0;
       clickWheel.setPointerCapture(e.pointerId);
     });
-
     clickWheel.addEventListener("pointermove", (e) => {
       if (!isTrackingWheel) return;
-      const currentAngle = getAngle(e);
-      let delta = currentAngle - lastAngle;
+      let delta = getAngle(e) - lastAngle;
       if (delta > 180) delta -= 360; if (delta < -180) delta += 360;
-      accumulatedAngle += delta; lastAngle = currentAngle;
-
+      accumulatedAngle += delta; lastAngle = getAngle(e);
       if (Math.abs(accumulatedAngle) >= 15) {
         const direction = accumulatedAngle > 0 ? 1 : -1;
         if (currentView === views.MENU) {
@@ -489,8 +506,7 @@
           renderScreen();
         } else if (currentView === views.NOW_PLAYING) {
           if(library[currentTrackIndex].sourceType === "YouTube" && isYtReady) {
-            let v = ytPlayer.getVolume() + (direction * 5);
-            ytPlayer.setVolume(Math.max(0, Math.min(100, v)));
+            ytPlayer.setVolume(Math.max(0, Math.min(100, ytPlayer.getVolume() + (direction * 5))));
           } else {
             audioPlayer.volume = Math.max(0, Math.min(1, audioPlayer.volume + (direction * 0.05)));
           }
@@ -498,22 +514,20 @@
         accumulatedAngle = 0;
       }
     });
-    const stopTracking = () => isTrackingWheel = false;
-    clickWheel.addEventListener("pointerup", stopTracking);
-    clickWheel.addEventListener("pointercancel", stopTracking);
+    clickWheel.addEventListener("pointerup", () => isTrackingWheel = false);
 
-    // --- LOGIQUE YOUTUBE STREAMING ---
+    // Ajout YouTube & Sauvegarde
     document.getElementById("playYtBtn").onclick = () => {
       const input = document.getElementById("ytUrlInput").value.trim();
       if (!input) return;
       const ytId = extractYtId(input);
-      if (!ytId) { alert("Lien YouTube invalide."); return; }
+      if (!ytId) { alert("Lien invalide"); return; }
 
       const trackObj = {
         id: "yt-" + ytId,
-        title: "Chargement...", // Sera mis à jour quand la vidéo démarre
+        title: "Chargement...",
         artist: "YouTube",
-        album: "Stream Direct",
+        album: "Stream",
         cover: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
         ytId: ytId,
         sourceType: "YouTube",
@@ -521,48 +535,29 @@
       };
       
       library.unshift(trackObj);
+      saveTrackToDB(trackObj); // Sauvegarde automatique permanente !
+      
       document.getElementById("ytUrlInput").value = "";
       playSongAtIndex(0);
-    };
-
-    // --- RECHERCHE ITUNES (Extraits) ---
-    document.getElementById("searchBtn").onclick = async () => {
-      const q = document.getElementById("searchInput").value;
-      if(!q) return;
-      const list = document.getElementById("searchResultsList");
-      list.innerHTML = "Recherche...";
-      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=15`);
-      const data = await res.json();
-      list.innerHTML = "";
-      data.results.forEach(item => {
-        const row = document.createElement("div");
-        row.className = "p-2 hover:bg-blue-50 cursor-pointer border-b flex";
-        row.innerHTML = `<img src="${item.artworkUrl60}" class="w-8 h-8 mr-2"/><div class="truncate flex-1"><b>${item.trackName}</b><br><span class="text-gray-500">${item.artistName}</span></div>`;
-        row.onclick = () => {
-          library.unshift({
-            id: "itunes-" + item.trackId, title: item.trackName, artist: item.artistName,
-            album: item.collectionName, cover: item.artworkUrl100.replace("100x100", "400x400"),
-            src: item.previewUrl, sourceType: "Extrait MP3", isLocal: false
-          });
-          playSongAtIndex(0);
-        };
-        list.appendChild(row);
-      });
     };
 
     // Import Local
     document.getElementById("localFileInput").onchange = (e) => {
       Array.from(e.target.files).forEach(file => {
-        library.unshift({
-          id: "loc-" + Date.now(), title: file.name.replace(/\.[^/.]+$/, ""), artist: "Fichier Local",
+        const trackObj = {
+          id: "loc-" + Date.now() + Math.random(), title: file.name.replace(/\.[^/.]+$/, ""), artist: "Local",
           album: "Importé", cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80",
           src: URL.createObjectURL(file), sourceType: "Local", isLocal: true
-        });
+        };
+        library.unshift(trackObj);
+        saveTrackToDB(trackObj);
       });
       playSongAtIndex(0);
     };
 
-    window.onload = renderScreen;
+    window.onload = () => {
+      initDB().then(() => renderScreen());
+    };
   </script>
 </body>
 </html>
