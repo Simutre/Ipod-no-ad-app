@@ -144,7 +144,7 @@
           </div>
         </div>
 
-        <!-- 3. VUE ÉCRAN DE VEILLE (Mode Horloge Rétro) -->
+        <!-- 3. VUE ÉCRAN DE VEILLE (Horloge Rétro) -->
         <div id="viewSleep" class="absolute inset-0 hidden flex flex-col items-center justify-center bg-black text-white cursor-pointer">
           <div class="text-4xl font-mono tracking-widest font-bold" id="sleepClock">12:00</div>
           <div class="text-xs text-slate-400 mt-2">Appuyez sur n'importe quelle touche</div>
@@ -314,6 +314,8 @@
               label: song.title,
               subLabel: song.artist,
               action: () => playSongFromActiveList(idx),
+              // Option d'ajout à une playlist ou suppression
+              onAction2: () => promptAddToPlaylist(song),
               onDelete: () => {
                 if (activePlaylist) {
                   list.splice(idx, 1);
@@ -343,12 +345,38 @@
       }
     }
 
+    function promptAddToPlaylist(song) {
+      const plNames = Object.keys(playlists);
+      if (plNames.length === 0) {
+        alert("Créez d'abord une playlist !");
+        return;
+      }
+      const choice = prompt(`Ajouter "${song.title}" à quelle playlist ?\n\nDisponibles : ${plNames.join(", ")}`);
+      if (choice && playlists[choice]) {
+        // Vérifier si le morceau n'y est pas déjà
+        if (!playlists[choice].some(s => s.id === song.id)) {
+          playlists[choice].push(song);
+          savePlaylistsToDB();
+          alert(`Ajouté à la playlist "${choice}" avec succès !`);
+        } else {
+          alert("Ce morceau est déjà dans cette playlist.");
+        }
+      } else if (choice) {
+        alert("Cette playlist n'existe pas.");
+      }
+    }
+
     function createNewPlaylist() {
       const nameNom = prompt("Nom de la nouvelle playlist :");
       if (nameNom && nameNom.trim() !== "") {
-        playlists[nameNom.trim()] = [];
-        savePlaylistsToDB();
-        renderScreen();
+        const cleanName = nameNom.trim();
+        if (!playlists[cleanName]) {
+          playlists[cleanName] = [];
+          savePlaylistsToDB();
+          renderScreen();
+        } else {
+          alert("Cette playlist existe déjà.");
+        }
       }
     }
 
@@ -401,11 +429,32 @@
           row.className = `flex items-center justify-between px-3 py-1.5 cursor-pointer border-b border-slate-100 ${isSel ? "ipod-selected-row font-semibold" : "text-slate-800"}`;
           row.innerHTML = `<div class="truncate pr-2 flex-1"><div>${item.label}</div>${item.subLabel ? `<div class="text-[10px] ${isSel ? 'text-blue-100' : 'text-slate-400'} truncate">${item.subLabel}</div>` : ''}</div>`;
           
+          let actionIcons = "";
+          if (item.onAction2) {
+            actionIcons += `<button class="text-[11px] px-1 py-0.5 rounded ml-1 ${isSel ? 'text-white hover:bg-blue-600' : 'text-blue-500 hover:bg-blue-100'}" title="Ajouter à une playlist"><i class="fa-solid fa-plus"></i></button>`;
+          }
           if (item.onDelete) {
-            row.innerHTML += `<button class="text-[11px] px-1.5 py-0.5 rounded ml-1 ${isSel ? 'text-white' : 'text-red-500'}"><i class="fa-solid fa-trash"></i></button>`;
-            row.querySelector('button').onclick = (e) => { e.stopPropagation(); playIpodClickSound(); item.onDelete(); };
+            actionIcons += `<button class="text-[11px] px-1 py-0.5 rounded ml-1 ${isSel ? 'text-white hover:bg-red-600' : 'text-red-500 hover:bg-red-100'}" title="Supprimer"><i class="fa-solid fa-trash"></i></button>`;
+          }
+
+          if (actionIcons) {
+            const btnContainer = document.createElement("div");
+            btnContainer.className = "flex items-center gap-1 shrink-0";
+            btnContainer.innerHTML = actionIcons;
+            
+            if (item.onAction2) {
+              btnContainer.children[0].onclick = (e) => { e.stopPropagation(); playIpodClickSound(); item.onAction2(); };
+            }
+            if (item.onDelete) {
+              const delIdx = item.onAction2 ? 1 : 0;
+              btnContainer.children[delIdx].onclick = (e) => { e.stopPropagation(); playIpodClickSound(); item.onDelete(); };
+            }
+            row.appendChild(btnContainer);
           } else {
-            row.innerHTML += `<div class="text-[10px] font-bold ${isSel ? "text-white" : "text-slate-400"}"><i class="fa-solid fa-chevron-right"></i></div>`;
+            const arrow = document.createElement("div");
+            arrow.className = `text-[10px] font-bold ${isSel ? "text-white" : "text-slate-400"}`;
+            arrow.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
+            row.appendChild(arrow);
           }
           
           row.onclick = () => { playIpodClickSound(); selectedIndex = index; renderScreen(); item.action(); };
@@ -489,7 +538,7 @@
       if (!track) return;
       document.getElementById("npTitle").textContent = track.title;
       document.getElementById("npArtist").textContent = track.artist;
-      document.getElementById("npAlbum").textContent = track.album || "Bibliothèque";
+      document.getElementById("npAlbum").textContent = activePlaylist ? `Playlist: ${activePlaylist}` : "Bibliothèque";
       document.getElementById("npCover").src = track.cover || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80";
       document.getElementById("npIndex").textContent = `${currentTrackIndex + 1} sur ${list.length}`;
       document.getElementById("eqBars").classList.toggle("hidden", !isPlaying);
@@ -567,7 +616,7 @@
 
     clickWheel.addEventListener("pointerup", () => isTrackingWheel = false);
 
-    // Import Local & Ajout automatique dans les playlists
+    // Import Local & Ajout automatique dans "Mes Favoris"
     document.getElementById("localFileInput").onchange = (e) => {
       initAudioContext();
       Array.from(e.target.files).forEach(file => {
@@ -582,10 +631,7 @@
         library.unshift(trackObj);
         saveTrackToDB(trackObj, file);
         
-        // Ajout par défaut dans "Mes Favoris"
-        if (playlists["MesFavoris"]) {
-          playlists["MesFavoris"].push(trackObj);
-        } else {
+        if (playlists["Mes Favoris"]) {
           playlists["Mes Favoris"].push(trackObj);
         }
       });
