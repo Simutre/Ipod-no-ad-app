@@ -103,7 +103,7 @@
           <div id="menuList" class="flex-1 overflow-y-auto no-scrollbar py-0 text-[13px] font-semibold text-slate-800"></div>
         </div>
 
-        <!-- 2. VUE AJOUT YOUTUBE DIRECT -->
+        <!-- 2. VUE AJOUT YOUTUBE STABLE -->
         <div id="viewYoutubeStream" class="absolute inset-0 hidden flex flex-col bg-white p-2">
           <div class="flex items-center justify-between mb-1">
             <p class="text-[11px] text-slate-500 font-medium">Ajouter un lien YouTube :</p>
@@ -115,7 +115,7 @@
               <i class="fa-brands fa-youtube mr-2 text-sm"></i> Ajouter à Ma Musique
             </button>
             <div id="ytStatus" class="text-center text-[10px] text-slate-500 mt-2 px-1 font-medium">
-              Conversion instantanée et lecture fluide garantie.
+              Génération du lien direct en cours...
             </div>
           </div>
         </div>
@@ -177,7 +177,7 @@
       </div>
     </div>
 
-    <!-- LECTEUR AUDIO PRINCIPAL -->
+    <!-- LECTEUR AUDIO -->
     <input type="file" id="localFileInput" accept="audio/*" multiple class="hidden" />
     <audio id="audioPlayer" preload="auto"></audio>
   </div>
@@ -187,7 +187,7 @@
     let currentVolume = 1.0;
     let audioCtx = null;
 
-    // --- SON DU CLIC MÉCANIQUE ---
+    // --- SON DU CLIC ---
     function initAudioContext() {
       if (!audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -214,11 +214,11 @@
       } catch (e) {}
     }
 
-    // --- BASE DE DONNÉES INDEXEDDB ---
+    // --- BASE DE DONNÉES LOCALES ---
     let db;
     function initDB() {
       return new Promise((resolve) => {
-        const request = indexedDB.open("iPodDatabaseFastStream", 1);
+        const request = indexedDB.open("iPodDatabaseCobalt", 1);
         request.onupgradeneeded = (e) => {
           db = e.target.result;
           if (!db.objectStoreNames.contains("tracks")) {
@@ -396,7 +396,7 @@
       audioPlayer.volume = currentVolume;
       audioPlayer.play().then(() => {
         isPlaying = true;
-      }).catch((e) => {
+      }).catch(() => {
         isPlaying = false;
       });
 
@@ -451,9 +451,13 @@
       document.getElementById("npAlbum").textContent = track.album || "";
       document.getElementById("npCover").src = track.cover || "";
       document.getElementById("npIndex").textContent = `${currentTrackIndex + 1} / ${library.length}`;
-      document.getElementById("npSourceTag").textContent = track.sourceType;
+      document.getElementById("npSourceTag").textContent = songSource(track);
       document.getElementById("eqBars").classList.toggle("hidden", !isPlaying);
       document.getElementById("volumeBar").style.width = `${currentVolume * 100}%`;
+    }
+
+    function songSource(track) {
+      return track.sourceType || "Stream";
     }
 
     function formatTime(sec) {
@@ -462,7 +466,7 @@
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    // --- BOUTONS IPOD ---
+    // --- CONTRÔLES ---
     document.getElementById("btnMenu").onclick = () => { playIpodClickSound(); goBack(); };
     document.getElementById("headerBackBtn").onclick = () => { playIpodClickSound(); goBack(); };
     
@@ -479,7 +483,7 @@
     document.getElementById("btnNext").onclick = () => { initAudioContext(); playNextTrack(); };
     document.getElementById("btnPrev").onclick = () => { initAudioContext(); playPrevTrack(); };
 
-    // --- MOLETTE TACTILE ---
+    // Molette
     const clickWheel = document.getElementById("clickWheel");
     let isTrackingWheel = false, lastAngle = 0, accumulatedAngle = 0;
     
@@ -518,7 +522,7 @@
 
     clickWheel.addEventListener("pointerup", () => isTrackingWheel = false);
 
-    // --- AJOUT YOUTUBE INSTANTANÉ ---
+    // --- PONT DE CONVERSION STABLE (COBALT API) ---
     document.getElementById("playYtBtn").onclick = async () => {
       playIpodClickSound();
       initAudioContext();
@@ -527,58 +531,72 @@
       if (!ytId) { alert("Lien YouTube invalide"); return; }
 
       const btn = document.getElementById("playYtBtn");
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Ajout en cours...';
+      const status = document.getElementById("ytStatus");
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Connexion...';
+      status.textContent = "Récupération du flux audio stable...";
 
       try {
-        // Récupération des métadonnées et du flux direct via une passerelle indépendante
-        const res = await fetch(`https://invidious.nerdvpn.de/api/v1/videos/${ytId}`);
-        const data = await res.json();
-        
-        const audioFormats = data.adaptiveFormats.filter(f => f.type && f.type.includes("audio"));
-        audioFormats.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
-        
-        if (audioFormats.length === 0) throw new Error("Audio non trouvé");
+        const response = await fetch("https://co.wuk.sh/api/json", {
+          method: "POST",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            url: input,
+            isAudioOnly: true,
+            dubLang: false
+          })
+        });
 
-        const trackObj = {
-          id: "yt-" + ytId,
-          title: data.title || "Morceau YouTube",
-          artist: data.author || "YouTube",
-          album: "Stream Direct",
-          cover: data.videoThumbnails ? data.videoThumbnails[0].url : `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
-          src: audioFormats[0].url,
-          sourceType: "YouTube",
-          isLocal: false
-        };
+        const data = await response.json();
         
-        library.unshift(trackObj);
-        saveTrackToDB(trackObj);
-        
-        document.getElementById("ytUrlInput").value = "";
-        btn.innerHTML = '<i class="fa-brands fa-youtube mr-2 text-sm"></i> Ajouter à Ma Musique';
-        playSongAtIndex(0);
-
+        if (data.status === "redirect" || data.status === "stream" || data.url) {
+          const audioUrl = data.url;
+          const trackObj = {
+            id: "yt-" + ytId,
+            title: data.filename ? data.filename.replace(/\.[^/.]+$/, "") : "Morceau YouTube",
+            artist: "YouTube",
+            album: "Stream Direct",
+            cover: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+            src: audioUrl,
+            sourceType: "Direct",
+            isLocal: false
+          };
+          
+          library.unshift(trackObj);
+          saveTrackToDB(trackObj);
+          
+          document.getElementById("ytUrlInput").value = "";
+          btn.innerHTML = '<i class="fa-brands fa-youtube mr-2 text-sm"></i> Ajouter à Ma Musique';
+          status.textContent = "Ajouté avec succès !";
+          playSongAtIndex(0);
+        } else {
+          throw new Error("Erreur de liaison");
+        }
       } catch (err) {
-        // Solution de secours si l'API est occupée : lecture directe via le lien de pont universel
-        const fallbackTrack = {
+        // Fallback ultime direct sans passer par l'API si le serveur bloque
+        const directFallback = {
           id: "yt-" + ytId,
-          title: "Musique YouTube (" + ytId + ")",
+          title: "Vidéo " + ytId,
           artist: "YouTube",
           album: "Stream Direct",
           cover: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
-          src: `https://invidious.nerdvpn.de/latest_version?id=${ytId}&itag=22`,
-          sourceType: "YouTube",
+          src: `https://invidious.projectsegfau.lt/latest_version?id=${ytId}&itag=22`,
+          sourceType: "Stream",
           isLocal: false
         };
 
-        library.unshift(fallbackTrack);
-        saveTrackToDB(fallbackTrack);
+        library.unshift(directFallback);
+        saveTrackToDB(directFallback);
         document.getElementById("ytUrlInput").value = "";
         btn.innerHTML = '<i class="fa-brands fa-youtube mr-2 text-sm"></i> Ajouter à Ma Musique';
+        status.textContent = "Ajouté via le canal de secours.";
         playSongAtIndex(0);
       }
     };
 
-    // --- IMPORT LOCAL ---
+    // Import Local
     document.getElementById("localFileInput").onchange = (e) => {
       initAudioContext();
       Array.from(e.target.files).forEach(file => {
