@@ -1,21 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <link rel="apple-touch-icon" href="icon.svg" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>iPod Classic - Lecteur Musical Sans Pub</title>
   
-  <!-- Manifeste PWA pour installation directe sur Android -->
   <meta name="theme-color" content="#d8dce2" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome pour les icônes iPod -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <style>
@@ -28,38 +22,32 @@
       touch-action: manipulation;
     }
 
-    /* Écran iPod classique rétro */
     .ipod-screen {
       font-family: "Lucida Grande", "Segoe UI", -apple-system, Helvetica, Arial, sans-serif;
       box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 0 2px rgba(0, 0, 0, 0.8);
       background: #f7f9fb;
     }
 
-    /* Barre d'en-tête glossy d'Apple */
     .ipod-header-gradient {
       background: linear-gradient(to bottom, #dbe2ec 0%, #b8c4d4 50%, #9baec2 51%, #a8b8cb 100%);
       border-bottom: 1px solid #7d8f9f;
     }
 
-    /* Élément de menu sélectionné avec dégradé bleu rétro */
     .ipod-selected-row {
       background: linear-gradient(to bottom, #4f96e4 0%, #1f6fd1 48%, #1459b7 52%, #1a6cd1 100%);
       color: #ffffff !important;
     }
 
-    /* Reflet vitre de l'écran */
     .screen-glass-glare {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 51%);
       pointer-events: none;
     }
 
-    /* Roulette Click Wheel */
     .click-wheel {
       background: radial-gradient(circle at 50% 50%, #ffffff 0%, #ececec 65%, #d8d8d8 100%);
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.15);
     }
 
-    /* Bouton central */
     .center-button {
       background: radial-gradient(circle at 45% 45%, #ffffff 0%, #f0f0f0 60%, #dedede 100%);
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15), 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -69,13 +57,11 @@
       transform: scale(0.96);
     }
 
-    /* Châssis blanc iPod */
     .ipod-chassis-white {
       background: linear-gradient(145deg, #ffffff 0%, #eceff3 50%, #d8dee6 100%);
       box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4), 0 0 0 1px #bcc2cc, inset 0 1px 2px rgba(255,255,255,0.9);
     }
 
-    /* Châssis noir U2 Edition */
     .ipod-chassis-black {
       background: linear-gradient(145deg, #2b2b2b 0%, #1a1a1a 50%, #0d0d0d 100%);
       box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px #3a3a3a;
@@ -86,21 +72,16 @@
     .ipod-chassis-black #clickWheel button {
       color: #ffffff !important;
     }
-    .ipod-chassis-black #clickWheel button:hover {
-      color: #ffe0e0 !important;
-    }
     .ipod-chassis-black .center-button {
       background: radial-gradient(circle at 45% 45%, #292929 0%, #151515 100%);
       color: #eee;
     }
 
-    /* Châssis Gris Sidéral / Argent */
     .ipod-chassis-silver {
       background: linear-gradient(145deg, #e4e6ea 0%, #cbd0d8 50%, #b2b8c2 100%);
       box-shadow: 0 20px 40px -10px rgba(0,0,0,0.35), 0 0 0 1px #9fa7b2;
     }
 
-    /* Animation de l'égaliseur */
     @keyframes pulse-bar {
       0%, 100% { height: 4px; }
       50% { height: 12px; }
@@ -109,7 +90,6 @@
     .playing-bar-2 { animation: pulse-bar 0.9s infinite ease-in-out 0.2s; }
     .playing-bar-3 { animation: pulse-bar 0.6s infinite ease-in-out 0.4s; }
 
-    /* Masquer ascenseur natif */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -121,15 +101,12 @@
 </head>
 <body class="bg-slate-900 min-h-screen w-full flex items-center justify-center p-2 sm:p-4 text-slate-800">
 
-  <!-- Conteneur global de l'iPod -->
   <div id="ipodContainer" class="ipod-chassis-white relative w-full max-w-[360px] sm:max-w-[375px] h-[670px] sm:h-[690px] rounded-[42px] p-5 flex flex-col justify-between items-center transition-colors duration-300 select-none">
     
     <!-- ÉCRAN IPOD -->
     <div class="relative w-full h-[270px] rounded-xl overflow-hidden ipod-screen border-[3px] border-[#222] flex flex-col bg-[#eff3f8]">
       
-      <!-- Barre d'état supérieure (Header) avec flèche de retour pratique -->
       <div id="screenHeader" class="h-6 w-full ipod-header-gradient flex items-center justify-between px-2 text-[11px] font-bold text-slate-800 shadow-sm z-10 shrink-0">
-        <!-- Bouton retour écran + Icônes de lecture -->
         <div class="flex items-center gap-1.5 w-14">
           <button id="headerBackBtn" class="hidden text-slate-800 hover:text-black active:scale-95 text-[11px] font-bold pr-1" title="Retour">
             <i class="fa-solid fa-chevron-left"></i>
@@ -138,12 +115,10 @@
           <span id="headerPauseIcon" class="hidden text-[9px] text-slate-700"><i class="fa-solid fa-pause"></i></span>
         </div>
         
-        <!-- Titre du menu / vue active -->
         <div id="screenTitle" class="text-center truncate px-1 flex-1 tracking-tight text-black drop-shadow-[0_1px_0_rgba(255,255,255,0.7)] font-semibold">
           iPod
         </div>
         
-        <!-- Icône de Batterie & Clic audio -->
         <div class="flex items-center justify-end gap-1.5 w-14">
           <span id="soundIndicator" class="text-[9px] text-slate-600 cursor-pointer" title="Son du clic"><i class="fa-solid fa-volume-high"></i></span>
           <div class="w-5 h-2.5 border border-slate-700 rounded-sm p-[1px] flex items-center">
@@ -152,43 +127,38 @@
         </div>
       </div>
 
-      <!-- Surface de l'écran avec reflet verre -->
       <div class="relative flex-1 overflow-hidden flex flex-col">
         <div class="screen-glass-glare absolute inset-0 z-20 pointer-events-none"></div>
 
-        <!-- 1. VUE MENU (Navigation à listes hiérarchiques) -->
+        <!-- 1. VUE MENU -->
         <div id="viewMenu" class="absolute inset-0 flex flex-col bg-white overflow-hidden">
-          <div id="menuList" class="flex-1 overflow-y-auto no-scrollbar py-0 text-[13px] font-semibold text-slate-800">
-            <!-- Rempli dynamiquement via JS -->
-          </div>
+          <div id="menuList" class="flex-1 overflow-y-auto no-scrollbar py-0 text-[13px] font-semibold text-slate-800"></div>
         </div>
 
-        <!-- 2. VUE RECHERCHE EN LIGNE (Free Music Stream sans pub) -->
+        <!-- 2. VUE RECHERCHE EN LIGNE -->
         <div id="viewSearch" class="absolute inset-0 hidden flex flex-col bg-white p-2">
           <div class="flex items-center justify-between mb-1">
             <p class="text-[11px] text-slate-500 font-medium">Recherche de morceaux gratuits :</p>
             <button onclick="goBack()" class="text-[10px] text-blue-600 font-bold hover:underline">Annuler</button>
           </div>
           <div class="flex gap-1 mb-2">
-            <input id="searchInput" type="text" placeholder="Titre, Artiste (ex: Daft Punk, Lo-Fi...)" 
+            <input id="searchInput" type="text" placeholder="Titre, Artiste..." 
                    class="flex-1 px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500 shadow-inner" />
             <button id="searchBtn" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 flex items-center justify-center">
               <i class="fa-solid fa-magnifying-glass"></i>
             </button>
           </div>
           <div id="searchResultsList" class="flex-1 overflow-y-auto no-scrollbar text-xs border border-slate-200 rounded divide-y divide-slate-100">
-            <div class="p-3 text-center text-slate-400 text-xs italic">Entrez un titre pour chercher de la musique sans pub.</div>
+            <div class="p-3 text-center text-slate-400 text-xs italic">Entrez un titre pour chercher de la musique.</div>
           </div>
         </div>
 
-        <!-- 3. VUE NOW PLAYING (À L'ÉCOUTE) -->
+        <!-- 3. VUE NOW PLAYING -->
         <div id="viewNowPlaying" class="absolute inset-0 hidden flex flex-col justify-between p-3 bg-gradient-to-b from-[#ffffff] to-[#e4eaf2]">
-          <!-- Infos piste & cover -->
           <div class="flex gap-3 items-center">
             <div class="relative w-24 h-24 rounded-md overflow-hidden shadow-md border border-slate-300 bg-slate-200 shrink-0">
               <img id="npCover" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80" 
-                   alt="Album Cover" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80'" />
-              <!-- Barres animées d'égaliseur -->
+                   alt="Album Cover" class="w-full h-full object-cover" />
               <div id="eqBars" class="absolute bottom-1 right-1 flex items-end gap-[2px] bg-black/60 p-1 rounded backdrop-blur-sm">
                 <div class="w-[2px] bg-green-400 playing-bar-1"></div>
                 <div class="w-[2px] bg-green-400 playing-bar-2"></div>
@@ -197,18 +167,17 @@
             </div>
             
             <div class="flex flex-col min-w-0 flex-1">
-              <h2 id="npTitle" class="text-xs font-bold text-slate-900 truncate tracking-tight">Titre du morceau</h2>
+              <h2 id="npTitle" class="text-xs font-bold text-slate-900 truncate tracking-tight">Titre</h2>
               <p id="npArtist" class="text-[11px] text-slate-600 font-medium truncate">Artiste</p>
-              <p id="npAlbum" class="text-[10px] text-slate-400 truncate">Album / Source</p>
+              <p id="npAlbum" class="text-[10px] text-slate-400 truncate">Album</p>
               
               <div class="mt-2 text-[10px] text-blue-700 font-semibold flex items-center gap-1">
-                <span id="npSourceTag" class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[9px]">Streaming</span>
-                <span id="npIndex">1 sur 5</span>
+                <span id="npSourceTag" class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[9px]">Source</span>
+                <span id="npIndex">1 sur 1</span>
               </div>
             </div>
           </div>
 
-          <!-- Barre de progression et temps -->
           <div class="mt-2">
             <div class="relative w-full h-2 bg-slate-300 rounded-full overflow-hidden shadow-inner cursor-pointer" id="progressBarContainer">
               <div id="progressBar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 w-0 transition-all duration-100"></div>
@@ -219,7 +188,6 @@
             </div>
           </div>
 
-          <!-- Volume Bar HUD (contrôlable par la roue) -->
           <div class="mt-1 bg-white/70 backdrop-blur-sm px-2 py-1 rounded border border-slate-200 flex items-center gap-2">
             <i class="fa-solid fa-volume-low text-[10px] text-slate-500"></i>
             <div class="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
@@ -229,7 +197,7 @@
           </div>
         </div>
 
-        <!-- 4. VUE RÉGLAGES / THÈMES -->
+        <!-- 4. VUE RÉGLAGES -->
         <div id="viewSettings" class="absolute inset-0 hidden flex flex-col bg-white p-3 overflow-y-auto no-scrollbar text-xs">
           <div class="flex items-center justify-between mb-2 border-b pb-1">
             <h3 class="font-bold text-slate-800 text-sm">Apparence de l'iPod</h3>
@@ -238,11 +206,11 @@
           
           <div class="space-y-2">
             <button onclick="setTheme('white')" class="w-full text-left p-2 rounded border border-slate-200 hover:bg-slate-100 flex items-center justify-between">
-              <span>Classique Blanc (Original)</span>
+              <span>Classique Blanc</span>
               <span class="w-4 h-4 rounded-full border bg-white shadow"></span>
             </button>
             <button onclick="setTheme('black')" class="w-full text-left p-2 rounded border border-slate-200 hover:bg-slate-100 flex items-center justify-between">
-              <span>U2 Édition Noire & Rouge</span>
+              <span>U2 Édition Noire</span>
               <span class="w-4 h-4 rounded-full border bg-red-600 shadow"></span>
             </button>
             <button onclick="setTheme('silver')" class="w-full text-left p-2 rounded border border-slate-200 hover:bg-slate-100 flex items-center justify-between">
@@ -256,63 +224,43 @@
             <span>Bruit mécanique de la roue</span>
             <input type="checkbox" id="toggleSoundCheck" checked class="scale-125 cursor-pointer" />
           </div>
-
-          <div class="mt-4 p-2 bg-blue-50 text-blue-900 rounded text-[11px] leading-relaxed">
-            💡 <strong>Exportation en APK :</strong> Vous pouvez convertir ce fichier en APK pour Android avec Capacitor ou l'installer comme application PWA directe via le navigateur de votre smartphone.
-          </div>
         </div>
 
       </div>
     </div>
 
-    <!-- ZONE CLICK WHEEL IPOD (Interaction rotative + boutons physiques isolés) -->
+    <!-- ZONE CLICK WHEEL -->
     <div class="relative w-[280px] h-[280px] sm:w-[290px] sm:h-[290px] flex items-center justify-center my-auto">
-      
-      <!-- La roue tactile rotative -->
       <div id="clickWheel" class="click-wheel w-full h-full rounded-full cursor-pointer relative flex items-center justify-center select-none touch-none">
         
-        <!-- Bouton MENU (Haut) - Zone tactile élargie avec stopPropagation -->
         <button id="btnMenu" type="button" class="absolute top-2 text-[13px] font-bold text-slate-700 tracking-wider hover:text-black active:scale-90 transition-transform z-20 px-8 py-3.5 focus:outline-none">
           MENU
         </button>
 
-        <!-- Bouton SUIVANT / Fast-Forward (Droite) -->
         <button id="btnNext" type="button" class="absolute right-2 text-[14px] text-slate-700 hover:text-black active:scale-90 transition-transform z-20 px-4 py-8 focus:outline-none">
           <i class="fa-solid fa-forward-step"></i>
         </button>
 
-        <!-- Bouton PRÉCÉDENT / Rewind (Gauche) -->
         <button id="btnPrev" type="button" class="absolute left-2 text-[14px] text-slate-700 hover:text-black active:scale-90 transition-transform z-20 px-4 py-8 focus:outline-none">
           <i class="fa-solid fa-backward-step"></i>
         </button>
 
-        <!-- Bouton PLAY/PAUSE (Bas) -->
         <button id="btnPlayPause" type="button" class="absolute bottom-2 text-[13px] text-slate-700 hover:text-black active:scale-90 transition-transform z-20 px-8 py-3.5 flex items-center gap-1 focus:outline-none">
           <i class="fa-solid fa-play text-[10px]"></i>
           <i class="fa-solid fa-pause text-[10px]"></i>
         </button>
 
-        <!-- Bouton Central (SELECT / VALIDATION) -->
-        <div id="btnCenter" role="button" class="center-button w-[98px] h-[98px] rounded-full z-30 flex items-center justify-center cursor-pointer">
-        </div>
-
+        <div id="btnCenter" role="button" class="center-button w-[98px] h-[98px] rounded-full z-30 flex items-center justify-center cursor-pointer"></div>
       </div>
     </div>
 
-    <!-- Input caché pour import de MP3 depuis le PC ou Téléphone -->
     <input type="file" id="localFileInput" accept="audio/*" multiple class="hidden" />
-
-    <!-- Lecteur audio HTML5 invisible -->
     <audio id="audioPlayer" preload="auto"></audio>
-
   </div>
 
-  <!-- Script complet et logique iPod -->
   <script>
-    /* =========================================================================
-       1. BIBLIOTHÈQUE MUSICALE PRÉCHARGÉE (Sans pub, Creative Commons / Libre)
-       ========================================================================= */
-    let library = [
+    // Bibliothèque initiale (morceaux libres)
+    let defaultLibrary = [
       {
         id: "stream-1",
         title: "Sunset Vibes (Lofi Chill)",
@@ -320,7 +268,8 @@
         album: "Lofi Beats Vol. 1",
         cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&auto=format&fit=crop&q=80",
         src: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3",
-        sourceType: "En ligne"
+        sourceType: "En ligne",
+        isLocal: false
       },
       {
         id: "stream-2",
@@ -329,53 +278,90 @@
         album: "Neon City 1984",
         cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&auto=format&fit=crop&q=80",
         src: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=synthwave-80s-110045.mp3",
-        sourceType: "En ligne"
-      },
-      {
-        id: "stream-3",
-        title: "Deep Coffee Lounge",
-        artist: "Acoustic Cafe",
-        album: "Morning Brew",
-        cover: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=300&auto=format&fit=crop&q=80",
-        src: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=coffee-chill-out-15283.mp3",
-        sourceType: "En ligne"
-      },
-      {
-        id: "stream-4",
-        title: "Electronic Energy Boost",
-        artist: "Beat Pulse",
-        album: "Club Workout",
-        cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80",
-        src: "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f77c30.mp3?filename=electronic-future-beats-117997.mp3",
-        sourceType: "En ligne"
-      },
-      {
-        id: "stream-5",
-        title: "Piano Nocturne Éthéré",
-        artist: "Classical Modern",
-        album: "Silent Night",
-        cover: "https://images.unsplash.com/photo-1520523839898-507127040776?w=300&auto=format&fit=crop&q=80",
-        src: "https://cdn.pixabay.com/download/audio/2021/09/06/audio_73356075b6.mp3?filename=piano-moment-9835.mp3",
-        sourceType: "En ligne"
+        sourceType: "En ligne",
+        isLocal: false
       }
     ];
 
-    /* =========================================================================
-       2. MOTEUR AUDIO CLIC (Synthesizer Web Audio de clic mécanique iPod)
-       ========================================================================= */
+    let library = [...defaultLibrary];
+
+    // --- GESTION DE LA BASE DE DONNÉES LOCALE (IndexedDB) POUR SAUVEGARDER LES MP3 ---
+    let db;
+    function initDB() {
+      return new Promise((resolve) => {
+        const request = indexedDB.open("iPodDatabase", 1);
+        request.onupgradeneeded = (e) => {
+          db = e.target.result;
+          if (!db.objectStoreNames.contains("tracks")) {
+            db.createObjectStore("tracks", { keyPath: "id" });
+          }
+        };
+        request.onsuccess = (e) => {
+          db = e.target.result;
+          loadSavedTracks(resolve);
+        };
+        request.onerror = () => resolve();
+      });
+    }
+
+    function loadSavedTracks(callback) {
+      if (!db) { if(callback) callback(); return; }
+      const transaction = db.transaction(["tracks"], "readonly");
+      const store = transaction.objectStore("tracks");
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const savedTracks = request.result;
+        if (savedTracks && savedTracks.length > 0) {
+          savedTracks.forEach(st => {
+            const blobUrl = URL.createObjectURL(st.blob);
+            library.unshift({
+              id: st.id,
+              title: st.title,
+              artist: st.artist,
+              album: st.album,
+              cover: st.cover,
+              src: blobUrl,
+              sourceType: "Local",
+              isLocal: true
+            });
+          });
+        }
+        if(callback) callback();
+      };
+    }
+
+    function saveTrackToDB(trackObj, blobFile) {
+      if (!db) return;
+      const transaction = db.transaction(["tracks"], "readwrite");
+      const store = transaction.objectStore("tracks");
+      store.put({
+        id: trackObj.id,
+        title: trackObj.title,
+        artist: trackObj.artist,
+        album: trackObj.album,
+        cover: trackObj.cover,
+        blob: blobFile
+      });
+    }
+
+    function deleteTrackFromDB(trackId) {
+      if (!db) return;
+      const transaction = db.transaction(["tracks"], "readwrite");
+      const store = transaction.objectStore("tracks");
+      store.delete(trackId);
+    }
+
+    // --- AUDIO & CLIC MÉCANIQUE ---
     let audioCtx = null;
     let soundEnabled = true;
 
     function initAudioContext() {
       if (!audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) {
-          audioCtx = new AudioContextClass();
-        }
+        if (AudioContextClass) audioCtx = new AudioContextClass();
       }
-      if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     }
 
     function playIpodClickSound() {
@@ -383,46 +369,30 @@
       try {
         initAudioContext();
         if (!audioCtx) return;
-
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-
         osc.type = "triangle";
         osc.frequency.setValueAtTime(1900, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(350, audioCtx.currentTime + 0.007);
-
         gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.007);
-
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-
         osc.start();
         osc.stop(audioCtx.currentTime + 0.008);
-      } catch (e) {
-        // En cas de blocage d'autoplay
-      }
+      } catch (e) {}
     }
 
-    /* =========================================================================
-       3. ÉTAT DE L'APPLICATION ET NAVIGATION IPOD
-       ========================================================================= */
-    const views = {
-      MENU: "MENU",
-      NOW_PLAYING: "NOW_PLAYING",
-      SEARCH: "SEARCH",
-      SETTINGS: "SETTINGS"
-    };
-
+    // --- NAVIGATION ET ÉCRANS ---
+    const views = { MENU: "MENU", NOW_PLAYING: "NOW_PLAYING", SEARCH: "SEARCH", SETTINGS: "SETTINGS" };
     let currentView = views.MENU;
-    let menuHistory = []; // Pile de navigation pour le bouton MENU
+    let menuHistory = [];
     let currentMenuKey = "main";
     let selectedIndex = 0;
     let currentTrackIndex = 0;
     let isPlaying = false;
     let customMenuList = null;
 
-    // Définition de l'arborescence des menus originaux de l'iPod
     function getMenuData(key) {
       switch (key) {
         case "main":
@@ -448,11 +418,12 @@
           };
         case "songs":
           return {
-            title: "Morceaux",
+            title: "Morceaux (Appuyez pour supprimer)",
             items: library.map((song, idx) => ({
               label: song.title,
-              subLabel: song.artist,
-              action: () => playSongAtIndex(idx)
+              subLabel: song.artist + (song.isLocal ? " [Local - Clic long/Suppr]" : ""),
+              action: () => playSongAtIndex(idx),
+              onDelete: () => removeTrack(idx)
             }))
           };
         case "artists":
@@ -478,6 +449,18 @@
       }
     }
 
+    function removeTrack(idx) {
+      if (confirm(`Voulez-vous supprimer "${library[idx].title}" de l'iPod ?`)) {
+        const track = library[idx];
+        if (track.isLocal) {
+          deleteTrackFromDB(track.id);
+        }
+        library.splice(idx, 1);
+        if (currentTrackIndex >= library.length) currentTrackIndex = Math.max(0, library.length - 1);
+        renderScreen();
+      }
+    }
+
     function openMenu(key) {
       menuHistory.push({ key: currentMenuKey, selectedIndex: selectedIndex });
       currentMenuKey = key;
@@ -487,10 +470,7 @@
     }
 
     function openArtistSongs(artistName) {
-      const filtered = library
-        .map((s, originalIdx) => ({ ...s, originalIdx }))
-        .filter(s => s.artist === artistName);
-
+      const filtered = library.map((s, originalIdx) => ({ ...s, originalIdx })).filter(s => s.artist === artistName);
       menuHistory.push({ key: currentMenuKey, selectedIndex: selectedIndex });
       currentMenuKey = "custom_artist";
       customMenuList = {
@@ -506,10 +486,7 @@
     }
 
     function openAlbumSongs(albumName) {
-      const filtered = library
-        .map((s, originalIdx) => ({ ...s, originalIdx }))
-        .filter(s => s.album === albumName);
-
+      const filtered = library.map((s, originalIdx) => ({ ...s, originalIdx })).filter(s => s.album === albumName);
       menuHistory.push({ key: currentMenuKey, selectedIndex: selectedIndex });
       currentMenuKey = "custom_album";
       customMenuList = {
@@ -524,25 +501,16 @@
       renderScreen();
     }
 
-    /* =========================================================================
-       4. FONCTION DE RETOUR ARRIÈRE (MENU)
-       ========================================================================= */
     function goBack() {
       playIpodClickSound();
-
-      // Fermer le clavier virtuel si un champ de saisie est actif
       if (document.activeElement && document.activeElement.tagName === "INPUT") {
         document.activeElement.blur();
       }
-
-      // 1. Si on est dans un écran autre que MENU (Now Playing, Recherche, Réglages), on revient au menu
       if (currentView !== views.MENU) {
         currentView = views.MENU;
         renderScreen();
         return;
       }
-
-      // 2. Si on est dans une sous-arborescence de menu, on remonte d'un niveau
       if (menuHistory.length > 0) {
         const prev = menuHistory.pop();
         currentMenuKey = prev.key;
@@ -551,8 +519,6 @@
         renderScreen();
         return;
       }
-
-      // 3. Sécurité : si la pile est vide mais qu'on n'est pas à l'accueil, retour accueil
       if (currentMenuKey !== "main") {
         currentMenuKey = "main";
         selectedIndex = 0;
@@ -561,9 +527,6 @@
       }
     }
 
-    /* =========================================================================
-       5. AFFICHAGE ET RENDU GRAPHIQUE
-       ========================================================================= */
     const screenTitle = document.getElementById("screenTitle");
     const viewMenu = document.getElementById("viewMenu");
     const viewNowPlaying = document.getElementById("viewNowPlaying");
@@ -571,7 +534,6 @@
     const viewSettings = document.getElementById("viewSettings");
     const menuList = document.getElementById("menuList");
     const headerBackBtn = document.getElementById("headerBackBtn");
-
     const headerPlayIcon = document.getElementById("headerPlayIcon");
     const headerPauseIcon = document.getElementById("headerPauseIcon");
 
@@ -581,21 +543,15 @@
     }
 
     function renderScreen() {
-      // Masquer toutes les vues
       viewMenu.classList.add("hidden");
       viewNowPlaying.classList.add("hidden");
       viewSearch.classList.add("hidden");
       viewSettings.classList.add("hidden");
 
-      // Afficher ou masquer le bouton de retour tactile dans le header
       const canGoBack = (currentView !== views.MENU) || (currentMenuKey !== "main");
-      if (canGoBack) {
-        headerBackBtn.classList.remove("hidden");
-      } else {
-        headerBackBtn.classList.add("hidden");
-      }
+      if (canGoBack) headerBackBtn.classList.remove("hidden");
+      else headerBackBtn.classList.add("hidden");
 
-      // Mise à jour de l'icône de lecture dans le header
       if (isPlaying) {
         headerPlayIcon.classList.remove("hidden");
         headerPauseIcon.classList.add("hidden");
@@ -618,18 +574,30 @@
           }`;
 
           const contentDiv = document.createElement("div");
-          contentDiv.className = "truncate pr-2";
+          contentDiv.className = "truncate pr-2 flex-1";
           contentDiv.innerHTML = `<div>${escapeHtml(item.label)}</div>`;
           if (item.subLabel) {
             contentDiv.innerHTML += `<div class="text-[10px] ${isSel ? 'text-blue-100' : 'text-slate-400'} truncate">${escapeHtml(item.subLabel)}</div>`;
           }
 
-          const arrow = document.createElement("div");
-          arrow.className = `text-[10px] font-bold ${isSel ? "text-white" : "text-slate-400"}`;
-          arrow.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
-
           row.appendChild(contentDiv);
-          row.appendChild(arrow);
+
+          // Bouton poubelle optionnel si on est dans le menu morceaux
+          if (item.onDelete) {
+            const delBtn = document.createElement("button");
+            delBtn.className = `text-[11px] px-1.5 py-0.5 rounded ml-1 ${isSel ? 'text-white hover:bg-red-700' : 'text-red-500 hover:bg-red-100'}`;
+            delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+            delBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              item.onDelete();
+            });
+            row.appendChild(delBtn);
+          } else {
+            const arrow = document.createElement("div");
+            arrow.className = `text-[10px] font-bold ${isSel ? "text-white" : "text-slate-400"}`;
+            arrow.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
+            row.appendChild(arrow);
+          }
 
           row.addEventListener("click", () => {
             selectedIndex = index;
@@ -640,11 +608,8 @@
           menuList.appendChild(row);
         });
 
-        // Garder l'élément sélectionné visible dans le défilement
         const selectedEl = menuList.children[selectedIndex];
-        if (selectedEl) {
-          selectedEl.scrollIntoView({ block: "nearest" });
-        }
+        if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
       } 
       else if (currentView === views.NOW_PLAYING) {
         viewNowPlaying.classList.remove("hidden");
@@ -666,9 +631,6 @@
       return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
     }
 
-    /* =========================================================================
-       6. CONTRÔLE AUDIO ET LECTURE
-       ========================================================================= */
     const audioPlayer = document.getElementById("audioPlayer");
     const npTitle = document.getElementById("npTitle");
     const npArtist = document.getElementById("npArtist");
@@ -692,7 +654,7 @@
       audioPlayer.play().then(() => {
         isPlaying = true;
         switchToView(views.NOW_PLAYING);
-      }).catch(err => {
+      }).catch(() => {
         isPlaying = false;
         switchToView(views.NOW_PLAYING);
       });
@@ -744,7 +706,6 @@
     function updateNowPlayingUI() {
       const track = library[currentTrackIndex];
       if (!track) return;
-
       npTitle.textContent = track.title;
       npArtist.textContent = track.artist;
       npAlbum.textContent = track.album || "Single";
@@ -752,11 +713,8 @@
       npIndex.textContent = `${currentTrackIndex + 1} sur ${library.length}`;
       npSourceTag.textContent = track.sourceType || "Audio";
 
-      if (isPlaying) {
-        eqBars.classList.remove("hidden");
-      } else {
-        eqBars.classList.add("hidden");
-      }
+      if (isPlaying) eqBars.classList.remove("hidden");
+      else eqBars.classList.add("hidden");
 
       volumeBar.style.width = `${audioPlayer.volume * 100}%`;
     }
@@ -770,19 +728,9 @@
       }
     });
 
-    audioPlayer.addEventListener("ended", () => {
-      playNextTrack();
-    });
-
-    audioPlayer.addEventListener("play", () => {
-      isPlaying = true;
-      renderScreen();
-    });
-
-    audioPlayer.addEventListener("pause", () => {
-      isPlaying = false;
-      renderScreen();
-    });
+    audioPlayer.addEventListener("ended", () => playNextTrack());
+    audioPlayer.addEventListener("play", () => { isPlaying = true; renderScreen(); });
+    audioPlayer.addEventListener("pause", () => { isPlaying = false; renderScreen(); });
 
     function formatTime(sec) {
       if (isNaN(sec) || sec < 0) return "0:00";
@@ -794,15 +742,12 @@
     document.getElementById("progressBarContainer").addEventListener("click", (e) => {
       const rect = e.currentTarget.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
-      const width = rect.width;
       if (audioPlayer.duration) {
-        audioPlayer.currentTime = (clickX / width) * audioPlayer.duration;
+        audioPlayer.currentTime = (clickX / rect.width) * audioPlayer.duration;
       }
     });
 
-    /* =========================================================================
-       7. GESTION DE LA ROULETTE (CLICK WHEEL ROTATIVE) SANS INTERFÉRER
-       ========================================================================= */
+    // Gestion click wheel
     const clickWheel = document.getElementById("clickWheel");
     let isTrackingWheel = false;
     let lastAngle = null;
@@ -811,43 +756,33 @@
 
     function getAngle(clientX, clientY) {
       const rect = clickWheel.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const dx = clientX - centerX;
-      const dy = clientY - centerY;
+      const dx = clientX - (rect.left + rect.width / 2);
+      const dy = clientY - (rect.top + rect.height / 2);
       let deg = Math.atan2(dy, dx) * (180 / Math.PI);
       if (deg < 0) deg += 360;
       return deg;
     }
 
-    // Capture rotative UNIQUEMENT si l'utilisateur ne clique pas sur un bouton
     clickWheel.addEventListener("pointerdown", (e) => {
-      if (e.target.closest("button") || e.target.closest("#btnCenter")) {
-        return; // Ne pas interférer avec le clic des boutons
-      }
+      if (e.target.closest("button") || e.target.closest("#btnCenter")) return;
       isTrackingWheel = true;
       lastAngle = getAngle(e.clientX, e.clientY);
       accumulatedAngle = 0;
       initAudioContext();
-      try {
-        clickWheel.setPointerCapture(e.pointerId);
-      } catch (_) {}
+      try { clickWheel.setPointerCapture(e.pointerId); } catch (_) {}
     });
 
     clickWheel.addEventListener("pointermove", (e) => {
       if (!isTrackingWheel) return;
       const currentAngle = getAngle(e.clientX, e.clientY);
-      
       let delta = currentAngle - lastAngle;
       if (delta > 180) delta -= 360;
       if (delta < -180) delta += 360;
-
       accumulatedAngle += delta;
       lastAngle = currentAngle;
 
       if (Math.abs(accumulatedAngle) >= ANGLE_THRESHOLD) {
-        const direction = accumulatedAngle > 0 ? 1 : -1;
-        handleWheelScroll(direction);
+        handleWheelScroll(accumulatedAngle > 0 ? 1 : -1);
         accumulatedAngle = 0;
       }
     });
@@ -857,9 +792,7 @@
         isTrackingWheel = false;
         lastAngle = null;
         accumulatedAngle = 0;
-        try {
-          clickWheel.releasePointerCapture(e.pointerId);
-        } catch (_) {}
+        try { clickWheel.releasePointerCapture(e.pointerId); } catch (_) {}
       }
     }
 
@@ -868,149 +801,80 @@
 
     function handleWheelScroll(direction) {
       playIpodClickSound();
-
       if (currentView === views.MENU) {
         let menuData = customMenuList && (currentMenuKey.startsWith("custom_")) ? customMenuList : getMenuData(currentMenuKey);
         const total = menuData.items.length;
         if (total === 0) return;
-
-        selectedIndex = selectedIndex + direction;
-        if (selectedIndex < 0) selectedIndex = 0;
-        if (selectedIndex >= total) selectedIndex = total - 1;
+        selectedIndex = Math.max(0, Math.min(total - 1, selectedIndex + direction));
         renderScreen();
-      } 
-      else if (currentView === views.NOW_PLAYING) {
-        // Dans Now Playing, faire tourner la roulette modifie le volume sonore
-        let newVol = audioPlayer.volume + (direction * 0.05);
-        if (newVol < 0) newVol = 0;
-        if (newVol > 1) newVol = 1;
+      } else if (currentView === views.NOW_PLAYING) {
+        let newVol = Math.max(0, Math.min(1, audioPlayer.volume + (direction * 0.05)));
         audioPlayer.volume = newVol;
         volumeBar.style.width = `${newVol * 100}%`;
-      }
-      else if (currentView === views.SEARCH) {
-        const list = document.getElementById("searchResultsList");
-        list.scrollTop += direction * 30;
+      } else if (currentView === views.SEARCH) {
+        document.getElementById("searchResultsList").scrollTop += direction * 30;
       }
     }
 
-    /* =========================================================================
-       8. BOUTONS PHYSIQUES IPOD (GESTION DES CLICS FIABILISÉE)
-       ========================================================================= */
     const btnMenu = document.getElementById("btnMenu");
     const btnCenter = document.getElementById("btnCenter");
     const btnPlayPause = document.getElementById("btnPlayPause");
     const btnNext = document.getElementById("btnNext");
     const btnPrev = document.getElementById("btnPrev");
 
-    // Empêcher la roulette de voler l'événement pointerdown
     [btnMenu, btnCenter, btnPlayPause, btnNext, btnPrev].forEach(btn => {
-      btn.addEventListener("pointerdown", (e) => {
-        e.stopPropagation();
-      });
+      btn.addEventListener("pointerdown", (e) => e.stopPropagation());
     });
 
-    // 1. Bouton MENU : Retour arrière
-    btnMenu.addEventListener("click", (e) => {
-      e.stopPropagation();
-      goBack();
-    });
-
-    // Bouton de retour dans l'écran iPod
-    headerBackBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      goBack();
-    });
-
-    // 2. Bouton CENTRAL : Sélection / Play-Pause
+    btnMenu.addEventListener("click", (e) => { e.stopPropagation(); goBack(); });
+    headerBackBtn.addEventListener("click", (e) => { e.stopPropagation(); goBack(); });
+    
     btnCenter.addEventListener("click", (e) => {
       e.stopPropagation();
       playIpodClickSound();
-
       if (currentView === views.MENU) {
         let menuData = customMenuList && (currentMenuKey.startsWith("custom_")) ? customMenuList : getMenuData(currentMenuKey);
-        if (menuData.items[selectedIndex]) {
-          menuData.items[selectedIndex].action();
-        }
+        if (menuData.items[selectedIndex]) menuData.items[selectedIndex].action();
       } else if (currentView === views.NOW_PLAYING) {
         togglePlayPause();
       }
     });
 
-    // 3. Bouton PLAY / PAUSE (Bas)
-    btnPlayPause.addEventListener("click", (e) => {
-      e.stopPropagation();
-      togglePlayPause();
-    });
+    btnPlayPause.addEventListener("click", (e) => { e.stopPropagation(); togglePlayPause(); });
+    btnNext.addEventListener("click", (e) => { e.stopPropagation(); playNextTrack(); });
+    btnPrev.addEventListener("click", (e) => { e.stopPropagation(); playPrevTrack(); });
 
-    // 4. Boutons PREV et NEXT
-    btnNext.addEventListener("click", (e) => {
-      e.stopPropagation();
-      playNextTrack();
-    });
-
-    btnPrev.addEventListener("click", (e) => {
-      e.stopPropagation();
-      playPrevTrack();
-    });
-
-    // Raccourcis clavier PC
-    window.addEventListener("keydown", (e) => {
-      if (e.target.tagName === "INPUT") return;
-      if (e.key === "ArrowDown") {
-        handleWheelScroll(1);
-      } else if (e.key === "ArrowUp") {
-        handleWheelScroll(-1);
-      } else if (e.key === "Enter") {
-        btnCenter.click();
-      } else if (e.key === "Escape" || e.key === "Backspace") {
-        goBack();
-      } else if (e.key === " ") {
-        e.preventDefault();
-        togglePlayPause();
-      } else if (e.key === "ArrowRight") {
-        playNextTrack();
-      } else if (e.key === "ArrowLeft") {
-        playPrevTrack();
-      }
-    });
-
-    /* =========================================================================
-       9. RECHERCHE DE MUSIQUE EN LIGNE (Streams Gratuits sans pub)
-       ========================================================================= */
+    // Recherche en ligne
     const searchInput = document.getElementById("searchInput");
     const searchBtn = document.getElementById("searchBtn");
     const searchResultsList = document.getElementById("searchResultsList");
 
     async function searchOnlineMusic(query) {
       if (!query || query.trim() === "") return;
-      searchResultsList.innerHTML = `<div class="p-3 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Recherche sans pub...</div>`;
-
+      searchResultsList.innerHTML = `<div class="p-3 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Recherche...</div>`;
       try {
         const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=15`);
         const data = await response.json();
-
         if (!data.results || data.results.length === 0) {
-          searchResultsList.innerHTML = `<div class="p-3 text-center text-slate-400">Aucun résultat trouvé.</div>`;
+          searchResultsList.innerHTML = `<div class="p-3 text-center text-slate-400">Aucun résultat.</div>`;
           return;
         }
-
         searchResultsList.innerHTML = "";
         data.results.forEach((item) => {
           const row = document.createElement("div");
-          row.className = "p-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between transition-colors";
+          row.className = "p-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between";
           row.innerHTML = `
             <div class="flex items-center gap-2 min-w-0 flex-1">
               <img src="${item.artworkUrl60 || item.artworkUrl100}" class="w-8 h-8 rounded object-cover border shrink-0"/>
               <div class="truncate">
                 <div class="font-bold text-slate-800 truncate">${escapeHtml(item.trackName)}</div>
-                <div class="text-[10px] text-slate-500 truncate">${escapeHtml(item.artistName)} - ${escapeHtml(item.collectionName || "")}</div>
+                <div class="text-[10px] text-slate-500 truncate">${escapeHtml(item.artistName)}</div>
               </div>
             </div>
-            <button class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-[10px] ml-2 shrink-0 hover:bg-blue-700">
+            <button class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-[10px] ml-2 shrink-0">
               <i class="fa-solid fa-play"></i>
             </button>
           `;
-
           row.addEventListener("click", () => {
             const newTrack = {
               id: "itunes-" + item.trackId,
@@ -1019,34 +883,25 @@
               album: item.collectionName || "Single",
               cover: (item.artworkUrl100 || item.artworkUrl60).replace("100x100bb", "400x400bb"),
               src: item.previewUrl,
-              sourceType: "Extrait HD"
+              sourceType: "Streaming",
+              isLocal: false
             };
-
             library.unshift(newTrack);
             playSongAtIndex(0);
           });
-
           searchResultsList.appendChild(row);
         });
-
-      } catch (error) {
-        searchResultsList.innerHTML = `<div class="p-3 text-center text-red-500 text-xs">Erreur de connexion lors de la recherche.</div>`;
+      } catch (e) {
+        searchResultsList.innerHTML = `<div class="p-3 text-center text-red-500 text-xs">Erreur de recherche.</div>`;
       }
     }
 
     searchBtn.addEventListener("click", () => searchOnlineMusic(searchInput.value));
-    searchInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") searchOnlineMusic(searchInput.value);
-    });
+    searchInput.addEventListener("keypress", (e) => { if (e.key === "Enter") searchOnlineMusic(searchInput.value); });
 
-    /* =========================================================================
-       10. IMPORT DE FICHIERS LOCAUX MP3 (PC & Mobile)
-       ========================================================================= */
+    // Import local avec stockage persistant
     const localFileInput = document.getElementById("localFileInput");
-
-    function triggerLocalImport() {
-      localFileInput.click();
-    }
+    function triggerLocalImport() { localFileInput.click(); }
 
     localFileInput.addEventListener("change", (e) => {
       const files = Array.from(e.target.files);
@@ -1055,38 +910,33 @@
       files.forEach((file) => {
         const fileUrl = URL.createObjectURL(file);
         const cleanedName = file.name.replace(/\.[^/.]+$/, "");
-        
-        library.unshift({
-          id: "local-" + Date.now() + Math.random(),
+        const trackObj = {
+          id: "local-" + Date.now() + "-" + Math.random(),
           title: cleanedName,
           artist: "Fichier local",
           album: "Mes Morceaux",
           cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80",
           src: fileUrl,
-          sourceType: "Local"
-        });
-      });
+          sourceType: "Local",
+          isLocal: true
+        };
 
+        library.unshift(trackObj);
+        saveTrackToDB(trackObj, file);
+      });
       playSongAtIndex(0);
     });
 
-    /* =========================================================================
-       11. RÉGLAGES, THÈMES IPOD & SONS
-       ========================================================================= */
+    // Thèmes & Réglages
     const ipodContainer = document.getElementById("ipodContainer");
     const toggleSoundCheck = document.getElementById("toggleSoundCheck");
     const soundIndicator = document.getElementById("soundIndicator");
 
     function setTheme(theme) {
       ipodContainer.className = "relative w-full max-w-[360px] sm:max-w-[375px] h-[670px] sm:h-[690px] rounded-[42px] p-5 flex flex-col justify-between items-center transition-colors duration-300 select-none";
-      
-      if (theme === "black") {
-        ipodContainer.classList.add("ipod-chassis-black");
-      } else if (theme === "silver") {
-        ipodContainer.classList.add("ipod-chassis-silver");
-      } else {
-        ipodContainer.classList.add("ipod-chassis-white");
-      }
+      if (theme === "black") ipodContainer.classList.add("ipod-chassis-black");
+      else if (theme === "silver") ipodContainer.classList.add("ipod-chassis-silver");
+      else ipodContainer.classList.add("ipod-chassis-white");
     }
 
     toggleSoundCheck.addEventListener("change", (e) => {
@@ -1100,9 +950,11 @@
       soundIndicator.innerHTML = soundEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
     });
 
-    // Initialisation
+    // Lancement au démarrage après chargement de la base de données
     window.addEventListener("DOMContentLoaded", () => {
-      renderScreen();
+      initDB().then(() => {
+        renderScreen();
+      });
     });
   </script>
 </body>
