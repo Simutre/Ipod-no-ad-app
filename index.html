@@ -11,6 +11,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://www.youtube.com/iframe_api"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -62,26 +63,6 @@
       box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4), 0 0 0 1px #bcc2cc, inset 0 1px 2px rgba(255,255,255,0.9);
     }
 
-    .ipod-chassis-black {
-      background: linear-gradient(145deg, #2b2b2b 0%, #1a1a1a 50%, #0d0d0d 100%);
-      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px #3a3a3a;
-    }
-    .ipod-chassis-black .click-wheel {
-      background: radial-gradient(circle at 50% 50%, #cc181e 0%, #aa0e13 70%, #880b0f 100%);
-    }
-    .ipod-chassis-black #clickWheel button {
-      color: #ffffff !important;
-    }
-    .ipod-chassis-black .center-button {
-      background: radial-gradient(circle at 45% 45%, #292929 0%, #151515 100%);
-      color: #eee;
-    }
-
-    .ipod-chassis-silver {
-      background: linear-gradient(145deg, #e4e6ea 0%, #cbd0d8 50%, #b2b8c2 100%);
-      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.35), 0 0 0 1px #9fa7b2;
-    }
-
     @keyframes pulse-bar {
       0%, 100% { height: 4px; }
       50% { height: 12px; }
@@ -90,13 +71,8 @@
     .playing-bar-2 { animation: pulse-bar 0.9s infinite ease-in-out 0.2s; }
     .playing-bar-3 { animation: pulse-bar 0.6s infinite ease-in-out 0.4s; }
 
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-slate-900 min-h-screen w-full flex items-center justify-center p-2 sm:p-4 text-slate-800">
@@ -107,22 +83,15 @@
       
       <div id="screenHeader" class="h-6 w-full ipod-header-gradient flex items-center justify-between px-2 text-[11px] font-bold text-slate-800 shadow-sm z-10 shrink-0">
         <div class="flex items-center gap-1.5 w-14">
-          <button id="headerBackBtn" class="hidden text-slate-800 hover:text-black active:scale-95 text-[11px] font-bold pr-1" title="Retour">
-            <i class="fa-solid fa-chevron-left"></i>
-          </button>
+          <button id="headerBackBtn" class="hidden text-slate-800 hover:text-black active:scale-95 text-[11px] font-bold pr-1"><i class="fa-solid fa-chevron-left"></i></button>
           <span id="headerPlayIcon" class="hidden text-[9px] text-slate-700"><i class="fa-solid fa-play"></i></span>
           <span id="headerPauseIcon" class="hidden text-[9px] text-slate-700"><i class="fa-solid fa-pause"></i></span>
         </div>
         
-        <div id="screenTitle" class="text-center truncate px-1 flex-1 tracking-tight text-black drop-shadow-[0_1px_0_rgba(255,255,255,0.7)] font-semibold">
-          iPod
-        </div>
+        <div id="screenTitle" class="text-center truncate px-1 flex-1 tracking-tight text-black drop-shadow-[0_1px_0_rgba(255,255,255,0.7)] font-semibold">iPod</div>
         
         <div class="flex items-center justify-end gap-1.5 w-14">
-          <span id="soundIndicator" class="text-[9px] text-slate-600 cursor-pointer" title="Son du clic"><i class="fa-solid fa-volume-high"></i></span>
-          <div class="w-5 h-2.5 border border-slate-700 rounded-sm p-[1px] flex items-center">
-            <div class="w-full h-full bg-emerald-600 rounded-[1px]"></div>
-          </div>
+          <div class="w-5 h-2.5 border border-slate-700 rounded-sm p-[1px] flex items-center"><div class="w-full h-full bg-emerald-600 rounded-[1px]"></div></div>
         </div>
       </div>
 
@@ -133,29 +102,32 @@
           <div id="menuList" class="flex-1 overflow-y-auto no-scrollbar py-0 text-[13px] font-semibold text-slate-800"></div>
         </div>
 
-        <div id="viewImportUrl" class="absolute inset-0 hidden flex flex-col bg-white p-2">
+        <div id="viewSearch" class="absolute inset-0 hidden flex flex-col bg-white p-2">
           <div class="flex items-center justify-between mb-1">
-            <p class="text-[11px] text-slate-500 font-medium">Importer par lien direct :</p>
+            <p class="text-[11px] text-slate-500 font-medium">Recherche (Extraits pour trouver le titre) :</p>
+            <button onclick="goBack()" class="text-[10px] text-blue-600 font-bold hover:underline">Annuler</button>
+          </div>
+          <div class="flex gap-1 mb-2">
+            <input id="searchInput" type="text" placeholder="Artiste, Titre..." class="flex-1 px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none" />
+            <button id="searchBtn" class="bg-blue-600 text-white px-2 py-1 rounded text-xs"><i class="fa-solid fa-magnifying-glass"></i></button>
+          </div>
+          <div id="searchResultsList" class="flex-1 overflow-y-auto no-scrollbar text-xs border border-slate-200 rounded divide-y divide-slate-100">
+            <div class="p-3 text-center text-slate-400 text-xs italic">Recherchez vos musiques.</div>
+          </div>
+        </div>
+
+        <div id="viewYoutubeStream" class="absolute inset-0 hidden flex flex-col bg-white p-2">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-[11px] text-slate-500 font-medium">Écouter en entier (Lien YouTube) :</p>
             <button onclick="goBack()" class="text-[10px] text-blue-600 font-bold hover:underline">Fermer</button>
           </div>
-          
-          <div class="flex flex-col gap-2 mt-1">
-            <input id="urlInput" type="text" placeholder="Coller le lien Web de l'audio..." 
-                   class="w-full px-2 py-1 border border-slate-300 rounded text-[11px] focus:outline-none focus:border-blue-500 shadow-inner" />
-            
-            <div class="flex gap-2">
-              <input id="urlTitleInput" type="text" placeholder="Titre (ex: Billie Jean)" 
-                     class="w-1/2 px-2 py-1 border border-slate-300 rounded text-[11px] focus:outline-none focus:border-blue-500 shadow-inner" />
-              <input id="urlArtistInput" type="text" placeholder="Artiste" 
-                     class="w-1/2 px-2 py-1 border border-slate-300 rounded text-[11px] focus:outline-none focus:border-blue-500 shadow-inner" />
-            </div>
-
-            <button id="importUrlBtn" class="w-full bg-emerald-600 text-white px-2 py-1.5 rounded text-xs hover:bg-emerald-700 flex items-center justify-center font-bold mt-1">
-              <i class="fa-solid fa-download mr-2"></i> Télécharger & Ajouter à l'iPod
+          <div class="flex flex-col gap-2 mt-2">
+            <input id="ytUrlInput" type="text" placeholder="Coller le lien de la vidéo YouTube..." class="w-full px-2 py-2 border border-slate-300 rounded text-[11px] focus:outline-none focus:border-red-500" />
+            <button id="playYtBtn" class="w-full bg-red-600 text-white px-2 py-2 rounded text-xs hover:bg-red-700 flex items-center justify-center font-bold shadow-md">
+              <i class="fa-brands fa-youtube mr-2 text-sm"></i> Écouter le morceau complet
             </button>
-
-            <div id="importStatus" class="text-center text-[10px] text-slate-500 mt-2 font-medium px-2">
-              L'iPod téléchargera le fichier complet et l'enregistrera dans votre bibliothèque locale.
+            <div class="text-center text-[10px] text-slate-500 mt-2 px-1">
+              Collez un lien YouTube. L'iPod jouera le son en entier via son lecteur interne sans ouvrir l'application YouTube.
             </div>
           </div>
         </div>
@@ -163,20 +135,17 @@
         <div id="viewNowPlaying" class="absolute inset-0 hidden flex flex-col justify-between p-3 bg-gradient-to-b from-[#ffffff] to-[#e4eaf2]">
           <div class="flex gap-3 items-center">
             <div class="relative w-24 h-24 rounded-md overflow-hidden shadow-md border border-slate-300 bg-slate-200 shrink-0">
-              <img id="npCover" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80" 
-                   alt="Album Cover" class="w-full h-full object-cover" />
+              <img id="npCover" src="" class="w-full h-full object-cover" />
               <div id="eqBars" class="absolute bottom-1 right-1 flex items-end gap-[2px] bg-black/60 p-1 rounded backdrop-blur-sm">
                 <div class="w-[2px] bg-green-400 playing-bar-1"></div>
                 <div class="w-[2px] bg-green-400 playing-bar-2"></div>
                 <div class="w-[2px] bg-green-400 playing-bar-3"></div>
               </div>
             </div>
-            
             <div class="flex flex-col min-w-0 flex-1">
               <h2 id="npTitle" class="text-xs font-bold text-slate-900 truncate tracking-tight">Titre</h2>
               <p id="npArtist" class="text-[11px] text-slate-600 font-medium truncate">Artiste</p>
               <p id="npAlbum" class="text-[10px] text-slate-400 truncate">Album</p>
-              
               <div class="mt-2 text-[10px] text-blue-700 font-semibold flex items-center gap-1">
                 <span id="npSourceTag" class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[9px]">Source</span>
                 <span id="npIndex">1 sur 1</span>
@@ -197,37 +166,9 @@
           <div class="mt-1 bg-white/70 backdrop-blur-sm px-2 py-1 rounded border border-slate-200 flex items-center gap-2">
             <i class="fa-solid fa-volume-low text-[10px] text-slate-500"></i>
             <div class="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-              <div id="volumeBar" class="h-full bg-slate-700 w-3/4"></div>
+              <div id="volumeBar" class="h-full bg-slate-700 w-full"></div>
             </div>
             <i class="fa-solid fa-volume-high text-[10px] text-slate-700"></i>
-          </div>
-        </div>
-
-        <div id="viewSettings" class="absolute inset-0 hidden flex flex-col bg-white p-3 overflow-y-auto no-scrollbar text-xs">
-          <div class="flex items-center justify-between mb-2 border-b pb-1">
-            <h3 class="font-bold text-slate-800 text-sm">Apparence de l'iPod</h3>
-            <button onclick="goBack()" class="text-[10px] text-blue-600 font-bold hover:underline">Fermer</button>
-          </div>
-          
-          <div class="space-y-2">
-            <button onclick="setTheme('white')" class="w-full text-left p-2 rounded border border-slate-200 hover:bg-slate-100 flex items-center justify-between">
-              <span>Classique Blanc</span>
-              <span class="w-4 h-4 rounded-full border bg-white shadow"></span>
-            </button>
-            <button onclick="setTheme('black')" class="w-full text-left p-2 rounded border border-slate-200 hover:bg-slate-100 flex items-center justify-between">
-              <span>U2 Édition Noire</span>
-              <span class="w-4 h-4 rounded-full border bg-red-600 shadow"></span>
-            </button>
-            <button onclick="setTheme('silver')" class="w-full text-left p-2 rounded border border-slate-200 hover:bg-slate-100 flex items-center justify-between">
-              <span>Argent Métallisé</span>
-              <span class="w-4 h-4 rounded-full border bg-slate-300 shadow"></span>
-            </button>
-          </div>
-
-          <h3 class="font-bold text-slate-800 mt-4 mb-2 border-b pb-1 text-sm">Options & Sons</h3>
-          <div class="flex items-center justify-between p-2 bg-slate-50 rounded border">
-            <span>Bruit mécanique de la roue</span>
-            <input type="checkbox" id="toggleSoundCheck" checked class="scale-125 cursor-pointer" />
           </div>
         </div>
 
@@ -236,137 +177,71 @@
 
     <div class="relative w-[280px] h-[280px] sm:w-[290px] sm:h-[290px] flex items-center justify-center my-auto">
       <div id="clickWheel" class="click-wheel w-full h-full rounded-full cursor-pointer relative flex items-center justify-center select-none touch-none">
-        
-        <button id="btnMenu" type="button" class="absolute top-2 text-[13px] font-bold text-slate-700 tracking-wider hover:text-black active:scale-90 transition-transform z-20 px-8 py-3.5 focus:outline-none">
-          MENU
+        <button id="btnMenu" type="button" class="absolute top-2 text-[13px] font-bold text-slate-700 hover:text-black z-20 px-8 py-3.5 focus:outline-none">MENU</button>
+        <button id="btnNext" type="button" class="absolute right-2 text-[14px] text-slate-700 hover:text-black z-20 px-4 py-8 focus:outline-none"><i class="fa-solid fa-forward-step"></i></button>
+        <button id="btnPrev" type="button" class="absolute left-2 text-[14px] text-slate-700 hover:text-black z-20 px-4 py-8 focus:outline-none"><i class="fa-solid fa-backward-step"></i></button>
+        <button id="btnPlayPause" type="button" class="absolute bottom-2 text-[13px] text-slate-700 hover:text-black z-20 px-8 py-3.5 flex items-center gap-1 focus:outline-none">
+          <i class="fa-solid fa-play text-[10px]"></i><i class="fa-solid fa-pause text-[10px]"></i>
         </button>
-
-        <button id="btnNext" type="button" class="absolute right-2 text-[14px] text-slate-700 hover:text-black active:scale-90 transition-transform z-20 px-4 py-8 focus:outline-none">
-          <i class="fa-solid fa-forward-step"></i>
-        </button>
-
-        <button id="btnPrev" type="button" class="absolute left-2 text-[14px] text-slate-700 hover:text-black active:scale-90 transition-transform z-20 px-4 py-8 focus:outline-none">
-          <i class="fa-solid fa-backward-step"></i>
-        </button>
-
-        <button id="btnPlayPause" type="button" class="absolute bottom-2 text-[13px] text-slate-700 hover:text-black active:scale-90 transition-transform z-20 px-8 py-3.5 flex items-center gap-1 focus:outline-none">
-          <i class="fa-solid fa-play text-[10px]"></i>
-          <i class="fa-solid fa-pause text-[10px]"></i>
-        </button>
-
-        <div id="btnCenter" role="button" class="center-button w-[98px] h-[98px] rounded-full z-30 flex items-center justify-center cursor-pointer"></div>
+        <div id="btnCenter" class="center-button w-[98px] h-[98px] rounded-full z-30 flex items-center justify-center cursor-pointer"></div>
       </div>
     </div>
 
     <input type="file" id="localFileInput" accept="audio/*" multiple class="hidden" />
-    <audio id="audioPlayer" preload="auto"></audio>
+    <audio id="audioPlayer" preload="auto" class="hidden"></audio>
+    <div id="ytPlayerContainer" style="position:absolute; width:1px; height:1px; top:-9999px; left:-9999px; opacity:0; pointer-events:none;"></div>
   </div>
 
   <script>
     let library = [];
 
-    // Base de données IndexedDB
-    let db;
-    function initDB() {
-      return new Promise((resolve) => {
-        const request = indexedDB.open("iPodDatabase", 7);
-        request.onupgradeneeded = (e) => {
-          db = e.target.result;
-          if (!db.objectStoreNames.contains("tracks")) {
-            db.createObjectStore("tracks", { keyPath: "id" });
-          }
-        };
-        request.onsuccess = (e) => {
-          db = e.target.result;
-          loadSavedTracks(resolve);
-        };
-        request.onerror = () => resolve();
-      });
-    }
+    // --- LECTEUR YOUTUBE FANTÔME (API OFFICIELLE) ---
+    let ytPlayer = null;
+    let isYtReady = false;
 
-    function loadSavedTracks(callback) {
-      if (!db) { if(callback) callback(); return; }
-      const transaction = db.transaction(["tracks"], "readonly");
-      const store = transaction.objectStore("tracks");
-      const request = store.getAll();
-
-      request.onsuccess = () => {
-        const savedTracks = request.result;
-        if (savedTracks && savedTracks.length > 0) {
-          savedTracks.forEach(st => {
-            const blobUrl = URL.createObjectURL(st.blob);
-            if (!library.some(l => l.id === st.id)) {
-              library.push({
-                id: st.id,
-                title: st.title,
-                artist: st.artist,
-                album: st.album,
-                cover: st.cover,
-                src: blobUrl,
-                sourceType: "Sauvegardé",
-                isLocal: true
-              });
-            }
-          });
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('ytPlayerContainer', {
+        height: '1', width: '1',
+        videoId: '',
+        playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'fs': 0, 'playsinline': 1 },
+        events: {
+          'onReady': () => isYtReady = true,
+          'onStateChange': onYtStateChange
         }
-        if(callback) callback();
-      };
-    }
-
-    function saveTrackToDB(trackObj, blobFile) {
-      if (!db) return;
-      const transaction = db.transaction(["tracks"], "readwrite");
-      const store = transaction.objectStore("tracks");
-      store.put({
-        id: trackObj.id,
-        title: trackObj.title,
-        artist: trackObj.artist,
-        album: trackObj.album,
-        cover: trackObj.cover,
-        blob: blobFile
       });
     }
 
-    function deleteTrackFromDB(trackId) {
-      if (!db) return;
-      const transaction = db.transaction(["tracks"], "readwrite");
-      const store = transaction.objectStore("tracks");
-      store.delete(trackId);
-    }
-
-    // Audio & Sound
-    let audioCtx = null;
-    let soundEnabled = true;
-
-    function initAudioContext() {
-      if (!audioCtx) {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) audioCtx = new AudioContextClass();
+    function onYtStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        isPlaying = true;
+        
+        // Récupérer le vrai titre de la vidéo si non défini
+        const currentTrack = library[currentTrackIndex];
+        if(currentTrack && currentTrack.title === "Chargement..." && ytPlayer.getVideoData) {
+            const vData = ytPlayer.getVideoData();
+            if(vData && vData.title) {
+                currentTrack.title = vData.title;
+                currentTrack.artist = vData.author || "YouTube";
+                updateNowPlayingUI();
+            }
+        }
+        renderScreen();
+      } else if (event.data === YT.PlayerState.PAUSED) {
+        isPlaying = false;
+        renderScreen();
+      } else if (event.data === YT.PlayerState.ENDED) {
+        playNextTrack();
       }
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    function playIpodClickSound() {
-      if (!soundEnabled) return;
-      try {
-        initAudioContext();
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(1900, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(350, audioCtx.currentTime + 0.007);
-        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.007);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.008);
-      } catch (e) {}
+    function extractYtId(url) {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : url; // Retourne l'ID ou l'entrée brute si c'est déjà un ID
     }
 
-    // Navigation UI
-    const views = { MENU: "MENU", NOW_PLAYING: "NOW_PLAYING", IMPORT_URL: "IMPORT_URL", SETTINGS: "SETTINGS" };
+    // --- NAVIGATION ---
+    const views = { MENU: "MENU", NOW_PLAYING: "NOW_PLAYING", SEARCH: "SEARCH", YT_STREAM: "YT_STREAM" };
     let currentView = views.MENU;
     let menuHistory = [];
     let currentMenuKey = "main";
@@ -374,6 +249,7 @@
     let currentTrackIndex = 0;
     let isPlaying = false;
     let customMenuList = null;
+    let progressInterval = null;
 
     function getMenuData(key) {
       switch (key) {
@@ -381,575 +257,312 @@
           return {
             title: "iPod",
             items: [
-              { label: "Ma Musique", action: () => openMenu("music") },
-              { label: "Importer via Fichier Local", action: () => triggerLocalImport() },
-              { label: "Importer via Lien (URL)", action: () => switchToView(views.IMPORT_URL) },
-              { label: "À l'écoute", action: () => { if(library.length > 0) switchToView(views.NOW_PLAYING); } },
-              { label: "Lecture Aléatoire", action: () => playShuffle() },
-              { label: "Réglages", action: () => switchToView(views.SETTINGS) }
-            ]
-          };
-        case "music":
-          return {
-            title: "Musique",
-            items: [
-              { label: "Morceaux", action: () => openMenu("songs") },
-              { label: "Artistes", action: () => openMenu("artists") },
-              { label: "Albums", action: () => openMenu("albums") }
+              { label: "Ma Musique", action: () => openMenu("songs") },
+              { label: "Écouter via Lien YouTube", action: () => switchToView(views.YT_STREAM) },
+              { label: "Importer Fichier MP3 Local", action: () => document.getElementById('localFileInput').click() },
+              { label: "Recherche iTunes (Extraits)", action: () => switchToView(views.SEARCH) },
+              { label: "À l'écoute", action: () => { if(library.length > 0) switchToView(views.NOW_PLAYING); } }
             ]
           };
         case "songs":
           if (library.length === 0) return { title: "Vide", items: [{ label: "Aucun morceau", action: () => {} }] };
           return {
-            title: "Morceaux",
+            title: "Musique (" + library.length + ")",
             items: library.map((song, idx) => ({
               label: song.title,
-              subLabel: song.artist,
+              subLabel: song.artist + (song.sourceType === "YouTube" ? " [Stream YT]" : ""),
               action: () => playSongAtIndex(idx),
-              onDelete: () => removeTrack(idx)
+              onDelete: () => { library.splice(idx, 1); renderScreen(); }
             }))
           };
-        case "artists":
-          const artists = [...new Set(library.map(s => s.artist))];
-          return {
-            title: "Artistes",
-            items: artists.map(art => ({
-              label: art,
-              action: () => openArtistSongs(art)
-            }))
-          };
-        case "albums":
-          const albums = [...new Set(library.map(s => s.album))];
-          return {
-            title: "Albums",
-            items: albums.map(alb => ({
-              label: alb,
-              action: () => openAlbumSongs(alb)
-            }))
-          };
-        default:
-          return { title: "iPod", items: [] };
-      }
-    }
-
-    function removeTrack(idx) {
-      if (confirm(`Voulez-vous supprimer ce morceau de l'iPod ?`)) {
-        const track = library[idx];
-        if (track.isLocal) deleteTrackFromDB(track.id);
-        library.splice(idx, 1);
-        if (currentTrackIndex >= library.length) currentTrackIndex = Math.max(0, library.length - 1);
-        renderScreen();
+        default: return { title: "iPod", items: [] };
       }
     }
 
     function openMenu(key) {
-      menuHistory.push({ key: currentMenuKey, selectedIndex: selectedIndex });
+      menuHistory.push({ key: currentMenuKey, selectedIndex });
       currentMenuKey = key;
       selectedIndex = 0;
       currentView = views.MENU;
       renderScreen();
     }
 
-    function openArtistSongs(artistName) {
-      const filtered = library.map((s, originalIdx) => ({ ...s, originalIdx })).filter(s => s.artist === artistName);
-      menuHistory.push({ key: currentMenuKey, selectedIndex: selectedIndex });
-      currentMenuKey = "custom_artist";
-      customMenuList = {
-        title: artistName,
-        items: filtered.map(f => ({
-          label: f.title,
-          subLabel: f.album,
-          action: () => playSongAtIndex(f.originalIdx)
-        }))
-      };
-      selectedIndex = 0;
-      renderScreen();
-    }
-
-    function openAlbumSongs(albumName) {
-      const filtered = library.map((s, originalIdx) => ({ ...s, originalIdx })).filter(s => s.album === albumName);
-      menuHistory.push({ key: currentMenuKey, selectedIndex: selectedIndex });
-      currentMenuKey = "custom_album";
-      customMenuList = {
-        title: albumName,
-        items: filtered.map(f => ({
-          label: f.title,
-          subLabel: f.artist,
-          action: () => playSongAtIndex(f.originalIdx)
-        }))
-      };
-      selectedIndex = 0;
-      renderScreen();
-    }
-
     function goBack() {
-      playIpodClickSound();
-      if (document.activeElement && document.activeElement.tagName === "INPUT") {
-        document.activeElement.blur();
-      }
-      if (currentView !== views.MENU) {
-        currentView = views.MENU;
-        renderScreen();
-        return;
-      }
+      if (document.activeElement && document.activeElement.tagName === "INPUT") document.activeElement.blur();
+      if (currentView !== views.MENU) { currentView = views.MENU; renderScreen(); return; }
       if (menuHistory.length > 0) {
         const prev = menuHistory.pop();
         currentMenuKey = prev.key;
         selectedIndex = prev.selectedIndex || 0;
-        customMenuList = null;
-        renderScreen();
-        return;
-      }
-      if (currentMenuKey !== "main") {
-        currentMenuKey = "main";
-        selectedIndex = 0;
-        customMenuList = null;
         renderScreen();
       }
     }
 
-    const screenTitle = document.getElementById("screenTitle");
-    const viewMenu = document.getElementById("viewMenu");
-    const viewNowPlaying = document.getElementById("viewNowPlaying");
-    const viewImportUrl = document.getElementById("viewImportUrl");
-    const viewSettings = document.getElementById("viewSettings");
-    const menuList = document.getElementById("menuList");
-    const headerBackBtn = document.getElementById("headerBackBtn");
-    const headerPlayIcon = document.getElementById("headerPlayIcon");
-    const headerPauseIcon = document.getElementById("headerPauseIcon");
-
-    function switchToView(viewName) {
-      currentView = viewName;
-      renderScreen();
-    }
+    // --- INTERFACE ---
+    function switchToView(viewName) { currentView = viewName; renderScreen(); }
 
     function renderScreen() {
-      viewMenu.classList.add("hidden");
-      viewNowPlaying.classList.add("hidden");
-      viewImportUrl.classList.add("hidden");
-      viewSettings.classList.add("hidden");
+      document.getElementById("viewMenu").classList.add("hidden");
+      document.getElementById("viewNowPlaying").classList.add("hidden");
+      document.getElementById("viewSearch").classList.add("hidden");
+      document.getElementById("viewYoutubeStream").classList.add("hidden");
 
-      const canGoBack = (currentView !== views.MENU) || (currentMenuKey !== "main");
-      if (canGoBack) headerBackBtn.classList.remove("hidden");
-      else headerBackBtn.classList.add("hidden");
-
-      if (isPlaying) {
-        headerPlayIcon.classList.remove("hidden");
-        headerPauseIcon.classList.add("hidden");
-      } else {
-        headerPlayIcon.classList.add("hidden");
-        headerPauseIcon.classList.remove("hidden");
-      }
+      document.getElementById("headerBackBtn").classList.toggle("hidden", (currentView === views.MENU && currentMenuKey === "main"));
+      
+      document.getElementById("headerPlayIcon").classList.toggle("hidden", !isPlaying);
+      document.getElementById("headerPauseIcon").classList.toggle("hidden", isPlaying);
 
       if (currentView === views.MENU) {
-        viewMenu.classList.remove("hidden");
-        let menuData = customMenuList && (currentMenuKey.startsWith("custom_")) ? customMenuList : getMenuData(currentMenuKey);
-        screenTitle.textContent = menuData.title;
+        document.getElementById("viewMenu").classList.remove("hidden");
+        let menuData = getMenuData(currentMenuKey);
+        document.getElementById("screenTitle").textContent = menuData.title;
 
+        const menuList = document.getElementById("menuList");
         menuList.innerHTML = "";
         menuData.items.forEach((item, index) => {
           const isSel = index === selectedIndex;
           const row = document.createElement("div");
-          row.className = `flex items-center justify-between px-3 py-1.5 cursor-pointer border-b border-slate-100 ${
-            isSel ? "ipod-selected-row font-semibold" : "hover:bg-slate-50 text-slate-800"
-          }`;
-
-          const contentDiv = document.createElement("div");
-          contentDiv.className = "truncate pr-2 flex-1";
-          contentDiv.innerHTML = `<div>${escapeHtml(item.label)}</div>`;
-          if (item.subLabel) {
-            contentDiv.innerHTML += `<div class="text-[10px] ${isSel ? 'text-blue-100' : 'text-slate-400'} truncate">${escapeHtml(item.subLabel)}</div>`;
-          }
-
-          row.appendChild(contentDiv);
-
+          row.className = `flex items-center justify-between px-3 py-1.5 cursor-pointer border-b border-slate-100 ${isSel ? "ipod-selected-row font-semibold" : "text-slate-800"}`;
+          row.innerHTML = `<div class="truncate pr-2 flex-1"><div>${item.label}</div>${item.subLabel ? `<div class="text-[10px] ${isSel ? 'text-blue-100' : 'text-slate-400'} truncate">${item.subLabel}</div>` : ''}</div>`;
+          
           if (item.onDelete) {
-            const delBtn = document.createElement("button");
-            delBtn.className = `text-[11px] px-1.5 py-0.5 rounded ml-1 ${isSel ? 'text-white hover:bg-red-700' : 'text-red-500 hover:bg-red-100'}`;
-            delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-            delBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              item.onDelete();
-            });
-            row.appendChild(delBtn);
+            row.innerHTML += `<button class="text-[11px] px-1.5 py-0.5 rounded ml-1 ${isSel ? 'text-white' : 'text-red-500'}"><i class="fa-solid fa-trash"></i></button>`;
+            row.querySelector('button').onclick = (e) => { e.stopPropagation(); item.onDelete(); };
           } else {
-            const arrow = document.createElement("div");
-            arrow.className = `text-[10px] font-bold ${isSel ? "text-white" : "text-slate-400"}`;
-            arrow.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
-            row.appendChild(arrow);
+            row.innerHTML += `<div class="text-[10px] font-bold ${isSel ? "text-white" : "text-slate-400"}"><i class="fa-solid fa-chevron-right"></i></div>`;
           }
-
-          row.addEventListener("click", () => {
-            selectedIndex = index;
-            renderScreen();
-            item.action();
-          });
-
+          
+          row.onclick = () => { selectedIndex = index; renderScreen(); item.action(); };
           menuList.appendChild(row);
         });
-
-        const selectedEl = menuList.children[selectedIndex];
-        if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
+        if (menuList.children[selectedIndex]) menuList.children[selectedIndex].scrollIntoView({ block: "nearest" });
       } 
       else if (currentView === views.NOW_PLAYING) {
-        viewNowPlaying.classList.remove("hidden");
-        screenTitle.textContent = "À l'écoute";
+        document.getElementById("viewNowPlaying").classList.remove("hidden");
+        document.getElementById("screenTitle").textContent = "À l'écoute";
         updateNowPlayingUI();
-      } 
-      else if (currentView === views.IMPORT_URL) {
-        viewImportUrl.classList.remove("hidden");
-        screenTitle.textContent = "Import Web";
-      } 
-      else if (currentView === views.SETTINGS) {
-        viewSettings.classList.remove("hidden");
-        screenTitle.textContent = "Réglages";
+      }
+      else if (currentView === views.YT_STREAM) {
+        document.getElementById("viewYoutubeStream").classList.remove("hidden");
+        document.getElementById("screenTitle").textContent = "Lien YouTube";
+      }
+      else if (currentView === views.SEARCH) {
+        document.getElementById("viewSearch").classList.remove("hidden");
+        document.getElementById("screenTitle").textContent = "Recherche iTunes";
       }
     }
 
-    function escapeHtml(str) {
-      if (!str) return "";
-      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
-    }
-
+    // --- LOGIQUE AUDIO ---
     const audioPlayer = document.getElementById("audioPlayer");
-    const npTitle = document.getElementById("npTitle");
-    const npArtist = document.getElementById("npArtist");
-    const npAlbum = document.getElementById("npAlbum");
-    const npCover = document.getElementById("npCover");
-    const npIndex = document.getElementById("npIndex");
-    const npSourceTag = document.getElementById("npSourceTag");
-    const progressBar = document.getElementById("progressBar");
-    const currentTimeEl = document.getElementById("currentTime");
-    const totalDurationEl = document.getElementById("totalDuration");
-    const volumeBar = document.getElementById("volumeBar");
-    const eqBars = document.getElementById("eqBars");
 
     function playSongAtIndex(index) {
       if (index < 0 || index >= library.length) return;
       currentTrackIndex = index;
       const track = library[currentTrackIndex];
 
-      audioPlayer.src = track.src;
-      initAudioContext();
-      audioPlayer.play().then(() => {
-        isPlaying = true;
-        switchToView(views.NOW_PLAYING);
-      }).catch(() => {
-        isPlaying = false;
-        switchToView(views.NOW_PLAYING);
-      });
-      renderScreen();
+      // Reset des lecteurs
+      audioPlayer.pause();
+      if(isYtReady) ytPlayer.pauseVideo();
+      clearInterval(progressInterval);
+
+      if (track.sourceType === "YouTube") {
+        if (!isYtReady) { alert("Le lecteur YouTube n'est pas encore prêt, veuillez patienter une seconde."); return; }
+        ytPlayer.loadVideoById(track.ytId);
+        startProgressTracker("yt");
+      } else {
+        audioPlayer.src = track.src;
+        audioPlayer.play().then(() => { isPlaying = true; }).catch(() => { isPlaying = false; });
+        startProgressTracker("html5");
+      }
+      
+      switchToView(views.NOW_PLAYING);
     }
 
     function togglePlayPause() {
-      playIpodClickSound();
-      if (!audioPlayer.src && library.length > 0) {
-        playSongAtIndex(currentTrackIndex);
-        return;
-      }
-      if (audioPlayer.paused) {
-        initAudioContext();
-        audioPlayer.play();
-        isPlaying = true;
+      if (library.length === 0) return;
+      const track = library[currentTrackIndex];
+      
+      if (track.sourceType === "YouTube" && isYtReady) {
+        const state = ytPlayer.getPlayerState();
+        if (state === YT.PlayerState.PLAYING) { ytPlayer.pauseVideo(); isPlaying = false; }
+        else { ytPlayer.playVideo(); isPlaying = true; }
       } else {
-        audioPlayer.pause();
-        isPlaying = false;
+        if (audioPlayer.paused) { audioPlayer.play(); isPlaying = true; }
+        else { audioPlayer.pause(); isPlaying = false; }
       }
       renderScreen();
     }
 
     function playNextTrack() {
-      playIpodClickSound();
       if (library.length === 0) return;
       currentTrackIndex = (currentTrackIndex + 1) % library.length;
       playSongAtIndex(currentTrackIndex);
     }
-
     function playPrevTrack() {
-      playIpodClickSound();
       if (library.length === 0) return;
-      if (audioPlayer.currentTime > 3) {
-        audioPlayer.currentTime = 0;
-        return;
-      }
       currentTrackIndex = (currentTrackIndex - 1 + library.length) % library.length;
       playSongAtIndex(currentTrackIndex);
     }
 
-    function playShuffle() {
-      playIpodClickSound();
-      if (library.length === 0) return;
-      const rand = Math.floor(Math.random() * library.length);
-      playSongAtIndex(rand);
+    function startProgressTracker(type) {
+      clearInterval(progressInterval);
+      progressInterval = setInterval(() => {
+        let current = 0, total = 0;
+        
+        if (type === "yt" && isYtReady) {
+          current = ytPlayer.getCurrentTime() || 0;
+          total = ytPlayer.getDuration() || 0;
+        } else {
+          current = audioPlayer.currentTime || 0;
+          total = audioPlayer.duration || 0;
+        }
+
+        if (total > 0 && !isNaN(total)) {
+          const pct = (current / total) * 100;
+          document.getElementById("progressBar").style.width = `${pct}%`;
+          document.getElementById("currentTime").textContent = formatTime(current);
+          document.getElementById("totalDuration").textContent = "-" + formatTime(total - current);
+        }
+      }, 500);
     }
 
     function updateNowPlayingUI() {
       const track = library[currentTrackIndex];
       if (!track) return;
-      npTitle.textContent = track.title;
-      npArtist.textContent = track.artist;
-      npAlbum.textContent = track.album || "Single";
-      npCover.src = track.cover || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80";
-      npIndex.textContent = `${currentTrackIndex + 1} sur ${library.length}`;
-      npSourceTag.textContent = track.sourceType || "Audio";
-
-      if (isPlaying) eqBars.classList.remove("hidden");
-      else eqBars.classList.add("hidden");
-
-      volumeBar.style.width = `${audioPlayer.volume * 100}%`;
+      document.getElementById("npTitle").textContent = track.title;
+      document.getElementById("npArtist").textContent = track.artist;
+      document.getElementById("npAlbum").textContent = track.album || "";
+      document.getElementById("npCover").src = track.cover || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80";
+      document.getElementById("npIndex").textContent = `${currentTrackIndex + 1} / ${library.length}`;
+      document.getElementById("npSourceTag").textContent = track.sourceType;
+      document.getElementById("eqBars").classList.toggle("hidden", !isPlaying);
     }
-
-    audioPlayer.addEventListener("timeupdate", () => {
-      if (!isNaN(audioPlayer.duration)) {
-        const pct = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-        progressBar.style.width = `${pct}%`;
-        currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
-        totalDurationEl.textContent = "-" + formatTime(audioPlayer.duration - audioPlayer.currentTime);
-      }
-    });
-
-    audioPlayer.addEventListener("ended", () => playNextTrack());
-    audioPlayer.addEventListener("play", () => { isPlaying = true; renderScreen(); });
-    audioPlayer.addEventListener("pause", () => { isPlaying = false; renderScreen(); });
 
     function formatTime(sec) {
       if (isNaN(sec) || sec < 0) return "0:00";
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60);
+      const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    document.getElementById("progressBarContainer").addEventListener("click", (e) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      if (audioPlayer.duration) {
-        audioPlayer.currentTime = (clickX / rect.width) * audioPlayer.duration;
-      }
-    });
+    // --- ÉVÈNEMENTS BOUTONS ---
+    document.getElementById("btnMenu").onclick = goBack;
+    document.getElementById("headerBackBtn").onclick = goBack;
+    document.getElementById("btnCenter").onclick = () => {
+      if (currentView === views.MENU) {
+        let menuData = getMenuData(currentMenuKey);
+        if (menuData.items[selectedIndex]) menuData.items[selectedIndex].action();
+      } else if (currentView === views.NOW_PLAYING) togglePlayPause();
+    };
+    document.getElementById("btnPlayPause").onclick = togglePlayPause;
+    document.getElementById("btnNext").onclick = playNextTrack;
+    document.getElementById("btnPrev").onclick = playPrevTrack;
 
-    // Gestion click wheel
+    // --- MOLETTE TACTILE ---
     const clickWheel = document.getElementById("clickWheel");
-    let isTrackingWheel = false;
-    let lastAngle = null;
-    let accumulatedAngle = 0;
-    const ANGLE_THRESHOLD = 18;
-
-    function getAngle(clientX, clientY) {
+    let isTrackingWheel = false, lastAngle = null, accumulatedAngle = 0;
+    
+    function getAngle(e) {
       const rect = clickWheel.getBoundingClientRect();
-      const dx = clientX - (rect.left + rect.width / 2);
-      const dy = clientY - (rect.top + rect.height / 2);
-      let deg = Math.atan2(dy, dx) * (180 / Math.PI);
-      if (deg < 0) deg += 360;
-      return deg;
+      const dx = e.clientX - (rect.left + rect.width / 2);
+      const dy = e.clientY - (rect.top + rect.height / 2);
+      return (Math.atan2(dy, dx) * (180 / Math.PI) + 360) % 360;
     }
 
     clickWheel.addEventListener("pointerdown", (e) => {
       if (e.target.closest("button") || e.target.closest("#btnCenter")) return;
-      isTrackingWheel = true;
-      lastAngle = getAngle(e.clientX, e.clientY);
-      accumulatedAngle = 0;
-      initAudioContext();
-      try { clickWheel.setPointerCapture(e.pointerId); } catch (_) {}
+      isTrackingWheel = true; lastAngle = getAngle(e); accumulatedAngle = 0;
+      clickWheel.setPointerCapture(e.pointerId);
     });
 
     clickWheel.addEventListener("pointermove", (e) => {
       if (!isTrackingWheel) return;
-      const currentAngle = getAngle(e.clientX, e.clientY);
+      const currentAngle = getAngle(e);
       let delta = currentAngle - lastAngle;
-      if (delta > 180) delta -= 360;
-      if (delta < -180) delta += 360;
-      accumulatedAngle += delta;
-      lastAngle = currentAngle;
+      if (delta > 180) delta -= 360; if (delta < -180) delta += 360;
+      accumulatedAngle += delta; lastAngle = currentAngle;
 
-      if (Math.abs(accumulatedAngle) >= ANGLE_THRESHOLD) {
-        handleWheelScroll(accumulatedAngle > 0 ? 1 : -1);
-        accumulatedAngle = 0;
-      }
-    });
-
-    function stopWheelTracking(e) {
-      if (isTrackingWheel) {
-        isTrackingWheel = false;
-        lastAngle = null;
-        accumulatedAngle = 0;
-        try { clickWheel.releasePointerCapture(e.pointerId); } catch (_) {}
-      }
-    }
-
-    clickWheel.addEventListener("pointerup", stopWheelTracking);
-    clickWheel.addEventListener("pointercancel", stopWheelTracking);
-
-    function handleWheelScroll(direction) {
-      playIpodClickSound();
-      if (currentView === views.MENU) {
-        let menuData = customMenuList && (currentMenuKey.startsWith("custom_")) ? customMenuList : getMenuData(currentMenuKey);
-        const total = menuData.items.length;
-        if (total === 0) return;
-        selectedIndex = Math.max(0, Math.min(total - 1, selectedIndex + direction));
-        renderScreen();
-      } else if (currentView === views.NOW_PLAYING) {
-        let newVol = Math.max(0, Math.min(1, audioPlayer.volume + (direction * 0.05)));
-        audioPlayer.volume = newVol;
-        volumeBar.style.width = `${newVol * 100}%`;
-      }
-    }
-
-    const btnMenu = document.getElementById("btnMenu");
-    const btnCenter = document.getElementById("btnCenter");
-    const btnPlayPause = document.getElementById("btnPlayPause");
-    const btnNext = document.getElementById("btnNext");
-    const btnPrev = document.getElementById("btnPrev");
-
-    [btnMenu, btnCenter, btnPlayPause, btnNext, btnPrev].forEach(btn => {
-      btn.addEventListener("pointerdown", (e) => e.stopPropagation());
-    });
-
-    btnMenu.addEventListener("click", (e) => { e.stopPropagation(); goBack(); });
-    headerBackBtn.addEventListener("click", (e) => { e.stopPropagation(); goBack(); });
-    
-    btnCenter.addEventListener("click", (e) => {
-      e.stopPropagation();
-      playIpodClickSound();
-      if (currentView === views.MENU) {
-        let menuData = customMenuList && (currentMenuKey.startsWith("custom_")) ? customMenuList : getMenuData(currentMenuKey);
-        if (menuData.items[selectedIndex]) menuData.items[selectedIndex].action();
-      } else if (currentView === views.NOW_PLAYING) {
-        togglePlayPause();
-      }
-    });
-
-    btnPlayPause.addEventListener("click", (e) => { e.stopPropagation(); togglePlayPause(); });
-    btnNext.addEventListener("click", (e) => { e.stopPropagation(); playNextTrack(); });
-    btnPrev.addEventListener("click", (e) => { e.stopPropagation(); playPrevTrack(); });
-
-    // --- NOUVEAU : IMPORT DIRECT PAR LIEN URL ---
-    const importUrlBtn = document.getElementById("importUrlBtn");
-    const urlInput = document.getElementById("urlInput");
-    const urlTitleInput = document.getElementById("urlTitleInput");
-    const urlArtistInput = document.getElementById("urlArtistInput");
-    const importStatus = document.getElementById("importStatus");
-
-    importUrlBtn.addEventListener("click", async () => {
-      const url = urlInput.value.trim();
-      const title = urlTitleInput.value.trim() || "Morceau Importé";
-      const artist = urlArtistInput.value.trim() || "Inconnu";
-
-      if (!url) {
-        importStatus.textContent = "Veuillez coller un lien valide.";
-        importStatus.className = "text-center text-[10px] mt-2 font-bold text-red-500 px-2";
-        return;
-      }
-
-      importUrlBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Téléchargement...';
-      importStatus.textContent = "Connexion et téléchargement en cours (peut prendre quelques secondes)...";
-      importStatus.className = "text-center text-[10px] mt-2 font-medium text-blue-500 px-2";
-
-      try {
-        // Utilisation d'un proxy public pour éviter les erreurs CORS qui bloquent les téléchargements directs entre serveurs
-        const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(url);
-        
-        const res = await fetch(proxyUrl);
-        if (!res.ok) throw new Error("Impossible de récupérer le fichier.");
-        
-        const blob = await res.blob();
-        if (!blob.type.includes("audio") && !blob.type.includes("video")) {
-            // Tentative de sauvegarde même si le serveur ne renvoie pas le bon header mime
-            console.warn("Le type de fichier n'est pas explicitement audio.");
+      if (Math.abs(accumulatedAngle) >= 15) {
+        const direction = accumulatedAngle > 0 ? 1 : -1;
+        if (currentView === views.MENU) {
+          const total = getMenuData(currentMenuKey).items.length;
+          selectedIndex = Math.max(0, Math.min(total - 1, selectedIndex + direction));
+          renderScreen();
+        } else if (currentView === views.NOW_PLAYING) {
+          if(library[currentTrackIndex].sourceType === "YouTube" && isYtReady) {
+            let v = ytPlayer.getVolume() + (direction * 5);
+            ytPlayer.setVolume(Math.max(0, Math.min(100, v)));
+          } else {
+            audioPlayer.volume = Math.max(0, Math.min(1, audioPlayer.volume + (direction * 0.05)));
+          }
         }
-
-        const blobUrl = URL.createObjectURL(blob);
-        const trackObj = {
-          id: "url-" + Date.now() + "-" + Math.random(),
-          title: title,
-          artist: artist,
-          album: "Import Web",
-          cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80",
-          src: blobUrl,
-          sourceType: "Direct",
-          isLocal: true
-        };
-
-        library.unshift(trackObj);
-        saveTrackToDB(trackObj, blob);
-
-        // Reset UI
-        urlInput.value = "";
-        urlTitleInput.value = "";
-        urlArtistInput.value = "";
-        
-        importUrlBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Ajouté avec succès !';
-        importStatus.textContent = `"${title}" a été téléchargé et enregistré dans l'iPod.`;
-        importStatus.className = "text-center text-[10px] mt-2 font-bold text-emerald-600 px-2";
-
-        setTimeout(() => {
-            importUrlBtn.innerHTML = '<i class="fa-solid fa-download mr-2"></i> Télécharger & Ajouter à l\'iPod';
-            importStatus.textContent = "L'iPod téléchargera le fichier complet et l'enregistrera dans votre bibliothèque.";
-            importStatus.className = "text-center text-[10px] mt-2 font-medium text-slate-500 px-2";
-        }, 3000);
-
-      } catch (err) {
-        importUrlBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> Erreur';
-        importStatus.textContent = "Le lien est bloqué ou invalide. Essayez un autre lien direct.";
-        importStatus.className = "text-center text-[10px] mt-2 font-bold text-red-500 px-2";
+        accumulatedAngle = 0;
       }
     });
+    const stopTracking = () => isTrackingWheel = false;
+    clickWheel.addEventListener("pointerup", stopTracking);
+    clickWheel.addEventListener("pointercancel", stopTracking);
 
-    // Importation MP3 locale traditionnelle
-    const localFileInput = document.getElementById("localFileInput");
-    function triggerLocalImport() { localFileInput.click(); }
+    // --- LOGIQUE YOUTUBE STREAMING ---
+    document.getElementById("playYtBtn").onclick = () => {
+      const input = document.getElementById("ytUrlInput").value.trim();
+      if (!input) return;
+      const ytId = extractYtId(input);
+      if (!ytId) { alert("Lien YouTube invalide."); return; }
 
-    localFileInput.addEventListener("change", (e) => {
-      const files = Array.from(e.target.files);
-      if (files.length === 0) return;
+      const trackObj = {
+        id: "yt-" + ytId,
+        title: "Chargement...", // Sera mis à jour quand la vidéo démarre
+        artist: "YouTube",
+        album: "Stream Direct",
+        cover: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+        ytId: ytId,
+        sourceType: "YouTube",
+        isLocal: false
+      };
+      
+      library.unshift(trackObj);
+      document.getElementById("ytUrlInput").value = "";
+      playSongAtIndex(0);
+    };
 
-      files.forEach((file) => {
-        const fileUrl = URL.createObjectURL(file);
-        const cleanedName = file.name.replace(/\.[^/.]+$/, "");
-        const trackObj = {
-          id: "local-" + Date.now() + "-" + Math.random(),
-          title: cleanedName,
-          artist: "Fichier local",
-          album: "Mes Morceaux",
-          cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80",
-          src: fileUrl,
-          sourceType: "Local",
-          isLocal: true
+    // --- RECHERCHE ITUNES (Extraits) ---
+    document.getElementById("searchBtn").onclick = async () => {
+      const q = document.getElementById("searchInput").value;
+      if(!q) return;
+      const list = document.getElementById("searchResultsList");
+      list.innerHTML = "Recherche...";
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=15`);
+      const data = await res.json();
+      list.innerHTML = "";
+      data.results.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "p-2 hover:bg-blue-50 cursor-pointer border-b flex";
+        row.innerHTML = `<img src="${item.artworkUrl60}" class="w-8 h-8 mr-2"/><div class="truncate flex-1"><b>${item.trackName}</b><br><span class="text-gray-500">${item.artistName}</span></div>`;
+        row.onclick = () => {
+          library.unshift({
+            id: "itunes-" + item.trackId, title: item.trackName, artist: item.artistName,
+            album: item.collectionName, cover: item.artworkUrl100.replace("100x100", "400x400"),
+            src: item.previewUrl, sourceType: "Extrait MP3", isLocal: false
+          });
+          playSongAtIndex(0);
         };
+        list.appendChild(row);
+      });
+    };
 
-        library.unshift(trackObj);
-        saveTrackToDB(trackObj, file);
+    // Import Local
+    document.getElementById("localFileInput").onchange = (e) => {
+      Array.from(e.target.files).forEach(file => {
+        library.unshift({
+          id: "loc-" + Date.now(), title: file.name.replace(/\.[^/.]+$/, ""), artist: "Fichier Local",
+          album: "Importé", cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80",
+          src: URL.createObjectURL(file), sourceType: "Local", isLocal: true
+        });
       });
       playSongAtIndex(0);
-    });
+    };
 
-    // Thèmes
-    const ipodContainer = document.getElementById("ipodContainer");
-    const toggleSoundCheck = document.getElementById("toggleSoundCheck");
-    const soundIndicator = document.getElementById("soundIndicator");
-
-    function setTheme(theme) {
-      ipodContainer.className = "relative w-full max-w-[360px] sm:max-w-[375px] h-[670px] sm:h-[690px] rounded-[42px] p-5 flex flex-col justify-between items-center transition-colors duration-300 select-none";
-      if (theme === "black") ipodContainer.classList.add("ipod-chassis-black");
-      else if (theme === "silver") ipodContainer.classList.add("ipod-chassis-silver");
-      else ipodContainer.classList.add("ipod-chassis-white");
-    }
-
-    toggleSoundCheck.addEventListener("change", (e) => {
-      soundEnabled = e.target.checked;
-      soundIndicator.innerHTML = soundEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
-    });
-
-    soundIndicator.addEventListener("click", () => {
-      soundEnabled = !soundEnabled;
-      toggleSoundCheck.checked = soundEnabled;
-      soundIndicator.innerHTML = soundEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
-    });
-
-    window.addEventListener("DOMContentLoaded", () => {
-      initDB().then(() => {
-        renderScreen();
-      });
-    });
+    window.onload = renderScreen;
   </script>
 </body>
 </html>
