@@ -113,7 +113,7 @@
               <i class="fa-brands fa-youtube mr-2 text-sm"></i> Ajouter et Écouter
             </button>
             <div id="ytStatus" class="text-center text-[10px] text-slate-500 mt-2 px-1 font-medium">
-              Le morceau sera automatiquement stocké dans "Ma Musique".
+              Stocké automatiquement dans "Ma Musique".
             </div>
           </div>
         </div>
@@ -180,12 +180,13 @@
 
   <script>
     let library = [];
+    let currentVolume = 1.0;
 
-    // --- BASE DE DONNÉES LOCALE (IndexedDB) POUR STOCKER LES LIENS YOUTUBE À VIE ---
+    // --- BASE DE DONNÉES INDEXEDDB ---
     let db;
     function initDB() {
       return new Promise((resolve) => {
-        const request = indexedDB.open("iPodDatabaseYT", 1);
+        const request = indexedDB.open("iPodDatabaseYT", 2);
         request.onupgradeneeded = (e) => {
           db = e.target.result;
           if (!db.objectStoreNames.contains("yt_tracks")) {
@@ -233,17 +234,18 @@
       store.delete(trackId);
     }
 
-    // --- LECTEUR YOUTUBE FANTÔME ---
+    // --- LECTEUR YOUTUBE ---
     let ytPlayer = null;
     let isYtReady = false;
 
     function onYouTubeIframeAPIReady() {
       ytPlayer = new YT.Player('ytPlayerContainer', {
-        height: '1', width: '1', videoId: '',
-        playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'fs': 0, 'playsinline': 1 },
+        height: '200', width: '200', videoId: '',
+        playerVars: { 'autoplay': 1, 'controls': 0, 'disablekb': 1, 'fs': 0, 'playsinline': 1 },
         events: {
           'onReady': () => isYtReady = true,
-          'onStateChange': onYtStateChange
+          'onStateChange': onYtStateChange,
+          'onError': onYtError
         }
       });
     }
@@ -251,13 +253,14 @@
     function onYtStateChange(event) {
       if (event.data === YT.PlayerState.PLAYING) {
         isPlaying = true;
+        ytPlayer.setVolume(currentVolume * 100);
         const currentTrack = library[currentTrackIndex];
-        if(currentTrack && currentTrack.title === "Chargement..." && ytPlayer.getVideoData) {
+        if(currentTrack && (currentTrack.title === "Chargement..." || !currentTrack.title)) {
             const vData = ytPlayer.getVideoData();
             if(vData && vData.title) {
                 currentTrack.title = vData.title;
                 currentTrack.artist = vData.author || "YouTube";
-                saveTrackToDB(currentTrack); // Mettre à jour en base
+                saveTrackToDB(currentTrack);
                 updateNowPlayingUI();
             }
         }
@@ -267,6 +270,16 @@
         renderScreen();
       } else if (event.data === YT.PlayerState.ENDED) {
         playNextTrack();
+      }
+    }
+
+    function onYtError(event) {
+      // Si YouTube bloque l'intégration, bascule automatique sur un flux proxy audio alternatif
+      const track = library[currentTrackIndex];
+      if (track && track.sourceType === "YouTube") {
+        track.sourceType = "Audio Web";
+        track.src = `https://invidious.nerdvpn.de/latest_version?id=${track.ytId}&itag=22`;
+        playSongAtIndex(currentTrackIndex);
       }
     }
 
@@ -307,7 +320,7 @@
               subLabel: song.artist,
               action: () => playSongAtIndex(idx),
               onDelete: () => {
-                if(song.isLocal) deleteTrackFromDB(song.id);
+                deleteTrackFromDB(song.id);
                 library.splice(idx, 1);
                 if (currentTrackIndex >= library.length) currentTrackIndex = Math.max(0, library.length - 1);
                 renderScreen();
@@ -392,15 +405,17 @@
       const track = library[currentTrackIndex];
 
       audioPlayer.pause();
-      if(isYtReady) ytPlayer.pauseVideo();
+      if(isYtReady) ytPlayer.stopVideo();
       clearInterval(progressInterval);
 
       if (track.sourceType === "YouTube") {
         if (!isYtReady) { alert("Lecteur en cours de chargement..."); return; }
         ytPlayer.loadVideoById(track.ytId);
+        ytPlayer.setVolume(currentVolume * 100);
         startProgressTracker("yt");
       } else {
         audioPlayer.src = track.src;
+        audioPlayer.volume = currentVolume;
         audioPlayer.play().then(() => { isPlaying = true; }).catch(() => { isPlaying = false; });
         startProgressTracker("html5");
       }
@@ -461,6 +476,7 @@
       document.getElementById("npIndex").textContent = `${currentTrackIndex + 1} / ${library.length}`;
       document.getElementById("npSourceTag").textContent = track.sourceType;
       document.getElementById("eqBars").classList.toggle("hidden", !isPlaying);
+      document.getElementById("volumeBar").style.width = `${currentVolume * 100}%`;
     }
 
     function formatTime(sec) {
@@ -481,7 +497,7 @@
     document.getElementById("btnNext").onclick = playNextTrack;
     document.getElementById("btnPrev").onclick = playPrevTrack;
 
-    // Molette tactile
+    // Molette tactile (Contrôle du volume et navigation)
     const clickWheel = document.getElementById("clickWheel");
     let isTrackingWheel = false, lastAngle = 0, accumulatedAngle = 0;
     function getAngle(e) {
@@ -505,11 +521,10 @@
           selectedIndex = Math.max(0, Math.min(total - 1, selectedIndex + direction));
           renderScreen();
         } else if (currentView === views.NOW_PLAYING) {
-          if(library[currentTrackIndex].sourceType === "YouTube" && isYtReady) {
-            ytPlayer.setVolume(Math.max(0, Math.min(100, ytPlayer.getVolume() + (direction * 5))));
-          } else {
-            audioPlayer.volume = Math.max(0, Math.min(1, audioPlayer.volume + (direction * 0.05)));
-          }
+          currentVolume = Math.max(0, Math.min(1, currentVolume + (direction * 0.05)));
+          audioPlayer.volume = currentVolume;
+          if (isYtReady && ytPlayer.setVolume) ytPlayer.setVolume(currentVolume * 100);
+          document.getElementById("volumeBar").style.width = `${currentVolume * 100}%`;
         }
         accumulatedAngle = 0;
       }
@@ -525,7 +540,7 @@
 
       const trackObj = {
         id: "yt-" + ytId,
-        title: "Chargement...",
+        title: "Vidéo YouTube",
         artist: "YouTube",
         album: "Stream",
         cover: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
@@ -535,7 +550,7 @@
       };
       
       library.unshift(trackObj);
-      saveTrackToDB(trackObj); // Sauvegarde automatique permanente !
+      saveTrackToDB(trackObj);
       
       document.getElementById("ytUrlInput").value = "";
       playSongAtIndex(0);
