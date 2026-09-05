@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>iPod Classic - Lecteur Musical Sans Pub</title>
+  <title>iPod Classic - Lecteur Musical</title>
   
   <meta name="theme-color" content="#d8dce2" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -133,20 +133,30 @@
           <div id="menuList" class="flex-1 overflow-y-auto no-scrollbar py-0 text-[13px] font-semibold text-slate-800"></div>
         </div>
 
-        <div id="viewSearch" class="absolute inset-0 hidden flex flex-col bg-white p-2">
+        <div id="viewImportUrl" class="absolute inset-0 hidden flex flex-col bg-white p-2">
           <div class="flex items-center justify-between mb-1">
-            <p class="text-[11px] text-slate-500 font-medium">Trouver un titre à importer :</p>
-            <button onclick="goBack()" class="text-[10px] text-blue-600 font-bold hover:underline">Annuler</button>
+            <p class="text-[11px] text-slate-500 font-medium">Importer par lien direct :</p>
+            <button onclick="goBack()" class="text-[10px] text-blue-600 font-bold hover:underline">Fermer</button>
           </div>
-          <div class="flex gap-1 mb-2">
-            <input id="searchInput" type="text" placeholder="Artiste, Titre (ex: Eminem)..." 
-                   class="flex-1 px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:border-blue-500 shadow-inner" />
-            <button id="searchBtn" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 flex items-center justify-center">
-              <i class="fa-solid fa-magnifying-glass"></i>
+          
+          <div class="flex flex-col gap-2 mt-1">
+            <input id="urlInput" type="text" placeholder="Coller le lien Web de l'audio..." 
+                   class="w-full px-2 py-1 border border-slate-300 rounded text-[11px] focus:outline-none focus:border-blue-500 shadow-inner" />
+            
+            <div class="flex gap-2">
+              <input id="urlTitleInput" type="text" placeholder="Titre (ex: Billie Jean)" 
+                     class="w-1/2 px-2 py-1 border border-slate-300 rounded text-[11px] focus:outline-none focus:border-blue-500 shadow-inner" />
+              <input id="urlArtistInput" type="text" placeholder="Artiste" 
+                     class="w-1/2 px-2 py-1 border border-slate-300 rounded text-[11px] focus:outline-none focus:border-blue-500 shadow-inner" />
+            </div>
+
+            <button id="importUrlBtn" class="w-full bg-emerald-600 text-white px-2 py-1.5 rounded text-xs hover:bg-emerald-700 flex items-center justify-center font-bold mt-1">
+              <i class="fa-solid fa-download mr-2"></i> Télécharger & Ajouter à l'iPod
             </button>
-          </div>
-          <div id="searchResultsList" class="flex-1 overflow-y-auto no-scrollbar text-xs border border-slate-200 rounded divide-y divide-slate-100">
-            <div class="p-3 text-center text-slate-400 text-xs italic">Recherchez vos musiques favorites pour les identifier.</div>
+
+            <div id="importStatus" class="text-center text-[10px] text-slate-500 mt-2 font-medium px-2">
+              L'iPod téléchargera le fichier complet et l'enregistrera dans votre bibliothèque locale.
+            </div>
           </div>
         </div>
 
@@ -259,7 +269,7 @@
     let db;
     function initDB() {
       return new Promise((resolve) => {
-        const request = indexedDB.open("iPodDatabase", 6);
+        const request = indexedDB.open("iPodDatabase", 7);
         request.onupgradeneeded = (e) => {
           db = e.target.result;
           if (!db.objectStoreNames.contains("tracks")) {
@@ -293,7 +303,7 @@
                 album: st.album,
                 cover: st.cover,
                 src: blobUrl,
-                sourceType: "Téléchargé",
+                sourceType: "Sauvegardé",
                 isLocal: true
               });
             }
@@ -356,7 +366,7 @@
     }
 
     // Navigation UI
-    const views = { MENU: "MENU", NOW_PLAYING: "NOW_PLAYING", SEARCH: "SEARCH", SETTINGS: "SETTINGS" };
+    const views = { MENU: "MENU", NOW_PLAYING: "NOW_PLAYING", IMPORT_URL: "IMPORT_URL", SETTINGS: "SETTINGS" };
     let currentView = views.MENU;
     let menuHistory = [];
     let currentMenuKey = "main";
@@ -371,12 +381,12 @@
           return {
             title: "iPod",
             items: [
-              { label: "Musique", action: () => openMenu("music") },
-              { label: "Recherche en ligne", action: () => switchToView(views.SEARCH) },
-              { label: "Importer mes MP3", action: () => triggerLocalImport() },
-              { label: "À l'écoute", action: () => switchToView(views.NOW_PLAYING), condition: () => library.length > 0 },
-              { label: "Aléatoire", action: () => playShuffle() },
-              { label: "Réglages & Thèmes", action: () => switchToView(views.SETTINGS) }
+              { label: "Ma Musique", action: () => openMenu("music") },
+              { label: "Importer via Fichier Local", action: () => triggerLocalImport() },
+              { label: "Importer via Lien (URL)", action: () => switchToView(views.IMPORT_URL) },
+              { label: "À l'écoute", action: () => { if(library.length > 0) switchToView(views.NOW_PLAYING); } },
+              { label: "Lecture Aléatoire", action: () => playShuffle() },
+              { label: "Réglages", action: () => switchToView(views.SETTINGS) }
             ]
           };
         case "music":
@@ -423,7 +433,7 @@
     }
 
     function removeTrack(idx) {
-      if (confirm(`Voulez-vous supprimer "${library[idx].title}" de l'iPod ?`)) {
+      if (confirm(`Voulez-vous supprimer ce morceau de l'iPod ?`)) {
         const track = library[idx];
         if (track.isLocal) deleteTrackFromDB(track.id);
         library.splice(idx, 1);
@@ -501,7 +511,7 @@
     const screenTitle = document.getElementById("screenTitle");
     const viewMenu = document.getElementById("viewMenu");
     const viewNowPlaying = document.getElementById("viewNowPlaying");
-    const viewSearch = document.getElementById("viewSearch");
+    const viewImportUrl = document.getElementById("viewImportUrl");
     const viewSettings = document.getElementById("viewSettings");
     const menuList = document.getElementById("menuList");
     const headerBackBtn = document.getElementById("headerBackBtn");
@@ -516,7 +526,7 @@
     function renderScreen() {
       viewMenu.classList.add("hidden");
       viewNowPlaying.classList.add("hidden");
-      viewSearch.classList.add("hidden");
+      viewImportUrl.classList.add("hidden");
       viewSettings.classList.add("hidden");
 
       const canGoBack = (currentView !== views.MENU) || (currentMenuKey !== "main");
@@ -586,9 +596,9 @@
         screenTitle.textContent = "À l'écoute";
         updateNowPlayingUI();
       } 
-      else if (currentView === views.SEARCH) {
-        viewSearch.classList.remove("hidden");
-        screenTitle.textContent = "Catalogue de recherche";
+      else if (currentView === views.IMPORT_URL) {
+        viewImportUrl.classList.remove("hidden");
+        screenTitle.textContent = "Import Web";
       } 
       else if (currentView === views.SETTINGS) {
         viewSettings.classList.remove("hidden");
@@ -781,8 +791,6 @@
         let newVol = Math.max(0, Math.min(1, audioPlayer.volume + (direction * 0.05)));
         audioPlayer.volume = newVol;
         volumeBar.style.width = `${newVol * 100}%`;
-      } else if (currentView === views.SEARCH) {
-        document.getElementById("searchResultsList").scrollTop += direction * 30;
       }
     }
 
@@ -814,100 +822,79 @@
     btnNext.addEventListener("click", (e) => { e.stopPropagation(); playNextTrack(); });
     btnPrev.addEventListener("click", (e) => { e.stopPropagation(); playPrevTrack(); });
 
-    // --- RECHERCHE FIABLE (iTunes API) ET COPIE POUR TÉLÉCHARGEMENT ---
-    const searchInput = document.getElementById("searchInput");
-    const searchBtn = document.getElementById("searchBtn");
-    const searchResultsList = document.getElementById("searchResultsList");
+    // --- NOUVEAU : IMPORT DIRECT PAR LIEN URL ---
+    const importUrlBtn = document.getElementById("importUrlBtn");
+    const urlInput = document.getElementById("urlInput");
+    const urlTitleInput = document.getElementById("urlTitleInput");
+    const urlArtistInput = document.getElementById("urlArtistInput");
+    const importStatus = document.getElementById("importStatus");
 
-    async function searchOnlineMusic(query) {
-      if (!query || query.trim() === "") return;
-      searchResultsList.innerHTML = `<div class="p-3 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Recherche dans le catalogue officiel...</div>`;
-      
+    importUrlBtn.addEventListener("click", async () => {
+      const url = urlInput.value.trim();
+      const title = urlTitleInput.value.trim() || "Morceau Importé";
+      const artist = urlArtistInput.value.trim() || "Inconnu";
+
+      if (!url) {
+        importStatus.textContent = "Veuillez coller un lien valide.";
+        importStatus.className = "text-center text-[10px] mt-2 font-bold text-red-500 px-2";
+        return;
+      }
+
+      importUrlBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Téléchargement...';
+      importStatus.textContent = "Connexion et téléchargement en cours (peut prendre quelques secondes)...";
+      importStatus.className = "text-center text-[10px] mt-2 font-medium text-blue-500 px-2";
+
       try {
-        const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=15`);
-        const data = await response.json();
-
-        if (!data.results || data.results.length === 0) {
-          searchResultsList.innerHTML = `<div class="p-3 text-center text-slate-400">Aucun morceau trouvé.</div>`;
-          return;
+        // Utilisation d'un proxy public pour éviter les erreurs CORS qui bloquent les téléchargements directs entre serveurs
+        const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(url);
+        
+        const res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error("Impossible de récupérer le fichier.");
+        
+        const blob = await res.blob();
+        if (!blob.type.includes("audio") && !blob.type.includes("video")) {
+            // Tentative de sauvegarde même si le serveur ne renvoie pas le bon header mime
+            console.warn("Le type de fichier n'est pas explicitement audio.");
         }
 
-        searchResultsList.innerHTML = "";
-        data.results.forEach((item) => {
-          const row = document.createElement("div");
-          row.className = "p-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between";
-          row.innerHTML = `
-            <div class="flex items-center gap-2 min-w-0 flex-1">
-              <img src="${item.artworkUrl60 || item.artworkUrl100}" class="w-8 h-8 rounded object-cover border shrink-0"/>
-              <div class="truncate">
-                <div class="font-bold text-slate-800 truncate">${escapeHtml(item.trackName)}</div>
-                <div class="text-[10px] text-slate-500 truncate">${escapeHtml(item.artistName)}</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1 ml-2 shrink-0">
-              <button class="download-btn bg-emerald-600 text-white rounded w-6 h-6 flex items-center justify-center text-[10px] hover:bg-emerald-700" title="Obtenir le MP3">
-                <i class="fa-solid fa-download"></i>
-              </button>
-              <button class="play-btn bg-blue-600 text-white rounded w-6 h-6 flex items-center justify-center text-[10px] hover:bg-blue-700" title="Écouter l'extrait">
-                <i class="fa-solid fa-play"></i>
-              </button>
-            </div>
-          `;
+        const blobUrl = URL.createObjectURL(blob);
+        const trackObj = {
+          id: "url-" + Date.now() + "-" + Math.random(),
+          title: title,
+          artist: artist,
+          album: "Import Web",
+          cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80",
+          src: blobUrl,
+          sourceType: "Direct",
+          isLocal: true
+        };
 
-          // Lecture de l'extrait
-          row.querySelector(".play-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            const previewTrack = {
-              id: "itunes-" + item.trackId,
-              title: item.trackName,
-              artist: item.artistName,
-              album: item.collectionName || "Extrait (30s)",
-              cover: (item.artworkUrl100 || item.artworkUrl60).replace("100x100bb", "400x400bb"),
-              src: item.previewUrl,
-              sourceType: "Extrait HD",
-              isLocal: false
-            };
-            
-            // Pour ne pas polluer la liste, on lance juste l'extrait temporairement
-            audioPlayer.src = previewTrack.src;
-            initAudioContext();
-            audioPlayer.play();
-            
-            // Affichage Now Playing temporaire
-            npTitle.textContent = previewTrack.title;
-            npArtist.textContent = previewTrack.artist;
-            npAlbum.textContent = previewTrack.album;
-            npCover.src = previewTrack.cover;
-            npSourceTag.textContent = previewTrack.sourceType;
-            switchToView(views.NOW_PLAYING);
-            isPlaying = true;
-          });
+        library.unshift(trackObj);
+        saveTrackToDB(trackObj, blob);
 
-          // Guide de téléchargement manuel
-          row.querySelector(".download-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            const fullTitle = `${item.artistName} - ${item.trackName}`;
-            
-            // Copie dans le presse-papier
-            navigator.clipboard.writeText(fullTitle).then(() => {
-              alert(`🎵 LE NOM DU TITRE A ÉTÉ COPIÉ !\n\n[ ${fullTitle} ]\n\n1. Rendez-vous sur votre site de téléchargement MP3 ou YouTube habituel.\n2. Collez le texte pour trouver le bon fichier.\n3. Une fois téléchargé, revenez dans le menu de l'iPod et utilisez "Importer mes MP3".`);
-            }).catch(() => {
-              alert(`Téléchargez manuellement ce titre :\n\n${fullTitle}\n\nPuis utilisez le menu "Importer mes MP3" pour l'ajouter à l'iPod définitivement.`);
-            });
-          });
+        // Reset UI
+        urlInput.value = "";
+        urlTitleInput.value = "";
+        urlArtistInput.value = "";
+        
+        importUrlBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Ajouté avec succès !';
+        importStatus.textContent = `"${title}" a été téléchargé et enregistré dans l'iPod.`;
+        importStatus.className = "text-center text-[10px] mt-2 font-bold text-emerald-600 px-2";
 
-          searchResultsList.appendChild(row);
-        });
+        setTimeout(() => {
+            importUrlBtn.innerHTML = '<i class="fa-solid fa-download mr-2"></i> Télécharger & Ajouter à l\'iPod';
+            importStatus.textContent = "L'iPod téléchargera le fichier complet et l'enregistrera dans votre bibliothèque.";
+            importStatus.className = "text-center text-[10px] mt-2 font-medium text-slate-500 px-2";
+        }, 3000);
 
-      } catch (e) {
-        searchResultsList.innerHTML = `<div class="p-3 text-center text-red-500 text-xs">Erreur réseau. Impossible de charger le catalogue.</div>`;
+      } catch (err) {
+        importUrlBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> Erreur';
+        importStatus.textContent = "Le lien est bloqué ou invalide. Essayez un autre lien direct.";
+        importStatus.className = "text-center text-[10px] mt-2 font-bold text-red-500 px-2";
       }
-    }
+    });
 
-    searchBtn.addEventListener("click", () => searchOnlineMusic(searchInput.value));
-    searchInput.addEventListener("keypress", (e) => { if (e.key === "Enter") searchOnlineMusic(searchInput.value); });
-
-    // Importation MP3 locale (LA VRAIE SOLUTION)
+    // Importation MP3 locale traditionnelle
     const localFileInput = document.getElementById("localFileInput");
     function triggerLocalImport() { localFileInput.click(); }
 
